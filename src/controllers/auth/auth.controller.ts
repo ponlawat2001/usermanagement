@@ -62,7 +62,7 @@ export const AuthController = new Elysia({ prefix: "/auth" })
         }
         
         // สร้าง JWT token และ refresh token สำหรับ user
-        const { accessToken, refreshToken } = JwtUtils.generateTokens(user);
+        const { accessToken, refreshToken } = await JwtUtils.generateTokens(user);
         
         // สร้าง response สำหรับการเข้าสู่ระบบสำเร็จ พร้อมกับ token
         return ResponseHandler.success({
@@ -96,7 +96,7 @@ export const AuthController = new Elysia({ prefix: "/auth" })
         const { refreshToken } = body;
         
         // สร้าง access token ใหม่จาก refresh token
-        const result = JwtUtils.refreshAccessToken(refreshToken);
+        const result = await JwtUtils.refreshAccessToken(refreshToken);
         
         if (!result) {
           return ResponseHandler.unauthorized("Invalid or expired refresh token");

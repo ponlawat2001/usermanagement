@@ -6,12 +6,12 @@ import { ResponseHandler } from '../utils/response.utils';
  * ตรวจสอบว่า request มี valid JWT token หรือไม่
  */
 export const authMiddleware = new Elysia()
-  .derive(({ request }) => {
+  .derive(async ({ request }) => {
     // ดึง Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('Authorization') || undefined;
     
     // ตรวจสอบและถอดรหัส token
-    const user = JwtUtils.getTokenFromHeader(authHeader);
+    const user = await JwtUtils.getTokenFromHeader(authHeader);
     
     // ส่งข้อมูล user กลับเพื่อใช้ในขั้นตอนต่อไป
     return {
@@ -38,11 +38,10 @@ export const requireAuth = new Elysia()
  */
 export const requireRole = (role: string) => new Elysia()
   .use(requireAuth)
-  .derive({ as: 'global' }, ({ user }) => {
+  .onBeforeHandle(({ user, set }) => {
     // ตรวจสอบว่าผู้ใช้มี role ที่ต้องการหรือไม่
     if (user.role !== role && user.role !== 'admin') {
+      set.status = 403;
       return ResponseHandler.forbidden('You do not have permission to access this resource');
     }
-    
-    return { user };
   });

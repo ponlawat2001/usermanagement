@@ -28,7 +28,7 @@ export function rateLimit(options: RateLimitOptions = {
   });
 
   return new Elysia()
-    .derive(({ request }) => {
+    .derive(({ request, set }) => {
       const key = keyGenerator(request);
       const now = Date.now();
       
@@ -57,25 +57,33 @@ export function rateLimit(options: RateLimitOptions = {
         const retryAfter = Math.ceil((store[key].resetTime - now) / 1000);
         
         // ส่งข้อมูล rate limit กลับไปที่ client
-        return ResponseHandler.error(
-          options.message,
-          429,
-          { 
+        set.status = 429;
+        set.headers = {
+          'Retry-After': retryAfter.toString(),
+          'X-RateLimit-Limit': options.max.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': Math.ceil(store[key].resetTime / 1000).toString()
+        };
+        
+        return {
+          success: false,
+          message: options.message,
+          data: { 
             retryAfter,
             limit: options.max,
             remaining: 0,
             reset: Math.ceil(store[key].resetTime / 1000)
           }
-        );
+        };
       }
       
       // ส่งข้อมูล rate limit ผ่าน headers
-      return {
-        headers: {
-          'X-RateLimit-Limit': options.max.toString(),
-          'X-RateLimit-Remaining': (options.max - store[key].count).toString(),
-          'X-RateLimit-Reset': Math.ceil(store[key].resetTime / 1000).toString()
-        }
+      set.headers = {
+        'X-RateLimit-Limit': options.max.toString(),
+        'X-RateLimit-Remaining': (options.max - store[key].count).toString(),
+        'X-RateLimit-Reset': Math.ceil(store[key].resetTime / 1000).toString()
       };
+      
+      return {};
     });
 }

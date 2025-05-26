@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import { jwt } from '@elysiajs/jwt';
 import { User } from '../interfaces/user';
 import crypto from 'crypto';
 
@@ -9,6 +9,13 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET || 'refresh-secret-key'; // ma
 // กำหนดระยะเวลาหมดอายุของ token
 const TOKEN_EXPIRY = '15m'; // 15 minutes for access token
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days for refresh token
+
+// สร้าง JWT instance
+const jwtInstance = jwt({
+  name: 'auth-token',
+  secret: JWT_SECRET,
+  exp: TOKEN_EXPIRY,
+});
 
 // Store สำหรับเก็บ refresh tokens
 // ในงานจริงควรเก็บใน database เพื่อสามารถ invalidate tokens ได้
@@ -25,7 +32,7 @@ export class JwtUtils {
   /**
    * สร้าง access token และ refresh token สำหรับ user
    */
-  static generateTokens(user: Partial<User>): { accessToken: string, refreshToken: string } {
+  static async generateTokens(user: Partial<User>): Promise<{ accessToken: string, refreshToken: string }> {
     // สร้าง payload โดยไม่รวมข้อมูลที่ละเอียดอ่อน เช่น รหัสผ่าน
     const payload = {
       id: user.id,
@@ -35,7 +42,7 @@ export class JwtUtils {
     };
     
     // สร้าง access token
-    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    const accessToken = await jwtInstance.sign(payload);
     
     // สร้าง refresh token
     const refreshToken = crypto.randomBytes(40).toString('hex');
@@ -55,7 +62,7 @@ export class JwtUtils {
   /**
    * สร้าง access token จาก refresh token
    */
-  static refreshAccessToken(refreshToken: string): { accessToken: string } | null {
+  static async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string } | null> {
     // ตรวจสอบว่า refresh token มีอยู่ใน store หรือไม่
     const storedToken = refreshTokenStore[refreshToken];
     
@@ -72,7 +79,7 @@ export class JwtUtils {
     const userId = storedToken.userId;
     
     // สร้าง access token ใหม่
-    const accessToken = jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    const accessToken = await jwtInstance.sign({ id: userId });
     
     return { accessToken };
   }
@@ -91,17 +98,17 @@ export class JwtUtils {
   /**
    * สร้าง JWT token สำหรับ user (สำหรับความเข้ากันได้กับโค้ดเดิม)
    */
-  static generateToken(user: Partial<User>): string {
-    const { accessToken } = this.generateTokens(user);
+  static async generateToken(user: Partial<User>): Promise<string> {
+    const { accessToken } = await this.generateTokens(user);
     return accessToken;
   }
   
   /**
    * ตรวจสอบและถอดรหัส token
    */
-  static verifyToken(token: string): any {
+  static async verifyToken(token: string): Promise<any> {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      return await jwtInstance.verify(token);
     } catch (error: any) {
       throw new Error(`Invalid token: ${error.message}`);
     }
@@ -112,7 +119,7 @@ export class JwtUtils {
    * @param authHeader - Authorization header จาก request
    * @returns decoded token หรือ null ถ้าไม่มี token หรือ token ไม่ถูกต้อง
    */
-  static getTokenFromHeader(authHeader: string | undefined): any {
+  static async getTokenFromHeader(authHeader: string | undefined): Promise<any> {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null;
     }
@@ -121,7 +128,7 @@ export class JwtUtils {
     const token = authHeader.split(' ')[1];
     
     try {
-      return this.verifyToken(token);
+      return await this.verifyToken(token);
     } catch (error) {
       return null;
     }
