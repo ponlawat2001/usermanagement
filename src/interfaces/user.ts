@@ -1,5 +1,5 @@
 export interface User {
-  id: string | number // สนับสนุนได้ทั้ง string (จาก DB) และ number (legacy)
+  id: string 
   username: string
   fullname: string
   email: string

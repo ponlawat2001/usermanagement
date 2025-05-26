@@ -5,6 +5,12 @@ import { UserRepo } from "../../repositories/user.repo";
 import { loginSchemaUser } from "../../schemas/user/user.schema";
 import { JwtUtils } from "../../utils/jwt.utils";
 import { requireAuth } from "../../middlewares/auth.middleware";
+import { 
+  loginSuccessExample, refreshTokenExample, unauthorizedExample, 
+  notFoundExample, validationErrorExample, serverErrorExample,
+  successNoDataExample
+} from "../../configs/swagger-examples";
+import { loginSchemaUserDocs } from "../../docs/auth.docs";
 
 const userRepo = new UserRepo();
 
@@ -81,11 +87,7 @@ export const AuthController = new Elysia({ prefix: "/auth" })
     },
     {
       body: loginSchemaUser,
-      detail: {
-        summary: 'User login',
-        description: 'Authenticate a user and return a session token',
-        tags: ['Authentication']
-      }
+      detail: loginSchemaUserDocs
     }
   )
   
@@ -115,7 +117,50 @@ export const AuthController = new Elysia({ prefix: "/auth" })
       detail: {
         summary: 'Refresh access token',
         description: 'Generate a new access token using a valid refresh token',
-        tags: ['Authentication']
+        tags: ['Authentication'],
+        responses: {
+          '200': {
+            description: 'Token refreshed successfully',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Object({
+                    accessToken: t.String()
+                  })
+                }),
+                example: refreshTokenExample
+              }
+            }
+          },
+          '401': {
+            description: 'Invalid or expired refresh token',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: unauthorizedExample
+              }
+            }
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: serverErrorExample
+              }
+            }
+          }
+        }
       }
     }
   )
@@ -139,7 +184,35 @@ export const AuthController = new Elysia({ prefix: "/auth" })
       detail: {
         summary: 'Logout',
         description: 'Invalidate the refresh token',
-        tags: ['Authentication']
+        tags: ['Authentication'],
+        responses: {
+          '200': {
+            description: 'Logged out successfully',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: successNoDataExample
+              }
+            }
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: serverErrorExample
+              }
+            }
+          }
+        }
       }
     }
   )
@@ -191,7 +264,74 @@ export const AuthController = new Elysia({ prefix: "/auth" })
       detail: {
         summary: 'Change password',
         description: 'Change user password with validation',
-        tags: ['Authentication']
+        tags: ['Authentication'],
+        responses: {
+          '200': {
+            description: 'Password changed successfully',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: successNoDataExample
+              }
+            }
+          },
+          '401': {
+            description: 'Authentication required',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: unauthorizedExample
+              }
+            }
+          },
+          '422': {
+            description: 'Validation error (passwords do not match or incorrect current password)',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: validationErrorExample
+              }
+            }
+          },
+          '404': {
+            description: 'User not found',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: notFoundExample
+              }
+            }
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: t.Object({
+                  status: t.Number(),
+                  message: t.String(),
+                  data: t.Null()
+                }),
+                example: serverErrorExample
+              }
+            }
+          }
+        }
       }
     }
   )
