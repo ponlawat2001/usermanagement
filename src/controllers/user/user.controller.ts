@@ -18,7 +18,6 @@ import {
 } from "../../schemas/user/user.schema";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserService } from "../../services/user/user.service";
-import { SwaggerDetails } from "../../interfaces/swagger";
 import { User } from "../../interfaces/user";
 
 const userService = new UserService();
@@ -28,8 +27,9 @@ export const UserController = new Elysia({ prefix: "/users" })
   .use(requireRole("admin"))
   .get(
     "/findAll",
-    async () => {
+    async ({ status }) => {
       const users = await userService.findAll();
+      console.log("Retrieved users:", status);
       return ResponseHandler.success(users, "Users retrieved successfully");
     },
     {
@@ -57,9 +57,11 @@ export const UserController = new Elysia({ prefix: "/users" })
   // Create new user
   .post(
     "/register",
-    async (body: User) => {
+    async (req: Request) => {
       try {
+        const body = req.body as Partial<User>;
         const newUser = await userService.createUser(body);
+
         return ResponseHandler.success(
           newUser,
           "User created successfully",

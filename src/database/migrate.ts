@@ -37,7 +37,8 @@ export async function runMigrations() {
           google_id TEXT,
           discord_id TEXT,
           github_id TEXT,
-          instragram_id TEXT
+          instragram_id TEXT,
+          role TEXT DEFAULT 'user'
         )
       `);
       

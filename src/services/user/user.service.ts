@@ -25,11 +25,11 @@ export class UserService {
         }
     }
     
-    async createUser(userData: any): Promise<User | {}> {
+    async createUser(userData: User): Promise<User | {}> {
         try {
             // เรียกใช้ repository method โดยตรง
             const createdUser = await this.userRepo.create(userData);
-            return createdUser as User; 
+            return createdUser; 
         } catch (error) {
             console.error('Error creating user:', error);
             return {};

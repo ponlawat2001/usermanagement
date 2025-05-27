@@ -20,13 +20,13 @@ export const app = new Elysia()
     })
   )
   // Apply rate limiting
-  .use(
-    rateLimit({
-      max: 100, // 100 requests
-      windowMs: 60 * 1000, // per minute
-      message: "Too many requests from this IP, please try again later",
-    })
-  )
+  // .use(
+  //   rateLimit({
+  //     max: 100, // 100 requests
+  //     windowMs: 60 * 1000, // per minute
+  //     message: "Too many requests from this IP, please try again later",
+  //   })
+  // )
   // Setup JWT
   .use(
     jwt({

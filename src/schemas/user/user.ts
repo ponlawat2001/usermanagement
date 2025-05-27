@@ -21,4 +21,5 @@ export const user = sqliteTable("user", {
   discordId: text("discord_id"),
   githubId: text("github_id"),
   instragramId: text("instragram_id"),
+  role: text("role").default("user"),
 });

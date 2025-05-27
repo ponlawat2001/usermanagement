@@ -2,18 +2,18 @@ import { table } from "../schemas/schema";
 import { db } from "../database/database";
 import { eq, and, isNull, or } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
+import { User } from "../interfaces/user";
 
 // สร้างฟังก์ชันเข้ารหัส password แบบง่าย
 // ในโปรดักชันควรใช้ bcrypt หรือ argon2 แทน
 async function hashPassword(password: string): Promise<string> {
-  return await Bun.password.hash(password,  {
+  return await Bun.password.hash(password, {
     algorithm: "bcrypt",
     cost: 5, // ค่าความซับซ้อนของการเข้ารหัส
   });
 }
 
 export class UserRepo {
-
   // ดึงข้อมูล user ทั้งหมด (ไม่รวม user ที่ถูกลบ)
   async findAll() {
     try {
@@ -71,22 +71,28 @@ export class UserRepo {
   }
 
   // สร้าง user ใหม่
-  async create(data: any) {
+  async create(data: User) {
+    console.log("Creating user with data:", data);
     try {
       // เข้ารหัส password ก่อนบันทึก
       const hashedPassword = await hashPassword(data.password);
 
-      const [user] = await db
+      // Generate an ID
+      const userId = createId();
+
+      // Insert user with all required fields
+      const user = await db
         .insert(table.user)
         .values({
-          id: createId(),
+          id: userId,
           username: data.username,
           fullname: data.fullname,
           password: hashedPassword,
           email: data.email,
+          role: data.role || "user",
+          isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
-          isActive: true,
         })
         .returning();
 
@@ -138,7 +144,7 @@ export class UserRepo {
       throw new Error("Failed to delete user");
     }
   }
-  
+
   // อัพเดทเฉพาะรหัสผ่านของ user
   async updatePassword(id: string | number, hashedPassword: string) {
     try {
