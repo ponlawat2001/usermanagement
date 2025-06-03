@@ -1,10 +1,10 @@
 import { t } from "elysia";
-import { spread } from "../../database/utils";
-import { table } from "../schema";
+import { spread } from "../database/utils";
+import { user } from "../schemas/user";
 
 // ใช้ spread เพื่อแปลง Drizzle schema ให้เข้ากับ Elysia t.Object
-export const userInsertSchema = spread(table.user, "insert");
-export const userSelectSchema = spread(table.user, "select");
+export const userInsertSchema = spread(user, "insert");
+export const userSelectSchema = spread(user, "select");
 
 // สร้าง schema สำหรับ create operation
 export const createSchemaUser = t.Object({

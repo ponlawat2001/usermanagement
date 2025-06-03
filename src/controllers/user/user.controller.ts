@@ -29,7 +29,6 @@ export const UserController = new Elysia({ prefix: "/users" })
     "/findAll",
     async ({ status }) => {
       const users = await userService.findAll();
-      console.log("Retrieved users:", status);
       return ResponseHandler.success(users, "Users retrieved successfully");
     },
     {
