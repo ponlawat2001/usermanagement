@@ -16,5 +16,6 @@ CREATE TABLE "user" (
 	"github_id" text,
 	"instragram_id" text,
 	"role" text DEFAULT 'user' NOT NULL,
-	CONSTRAINT "user_username_unique" UNIQUE("username")
+	CONSTRAINT "user_username_unique" UNIQUE("username"),
+	CONSTRAINT "user_email_unique" UNIQUE("email")
 );

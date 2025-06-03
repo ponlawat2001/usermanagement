@@ -36,17 +36,34 @@ export class UserService {
       if (!userData.username || !userData.email || !userData.password) {
         throw new Error("Username, email, and password are required");
       }
+      // Check for duplicate username or email
       const duplicateUser = await this.userRepo.findByUsernameOrEmail(
         userData.username
       );
+
+      // Check for duplicate username or email
+      const duplicateEmail = await this.userRepo.findByUsernameOrEmail(
+        userData.email
+      );
+
       if (duplicateUser) {
         console.warn(
           `User with username ${userData.username} or email ${userData.email} already exists`
         );
         throw new Error(
-          `duplicate user with username ${userData.username} or email ${userData.email}`
+          `duplicate user with username ${userData.username}`
         );
       }
+
+      if (duplicateEmail) {
+        console.warn(
+          `User with email ${userData.email} already exists`
+        );
+        throw new Error(
+          `duplicate user with email ${userData.email}`
+        );
+      }
+      
       // เรียกใช้ repository method โดยตรง
       const createdUser = await this.userRepo.create(userData);
       return createdUser;

@@ -7,10 +7,11 @@ import { UserController } from "./controllers/user/user.controller";
 import { AuthController } from "./controllers/auth/auth.controller";
 import { ResponseHandler } from "./utils/response.utils";
 import { rateLimit } from "./middlewares/rate-limit.middleware";
-import swaggerConfig from "./configs/swagger.config";
+import swaggerConfig from "./configs/swagger.config.json";
+import { extractUser } from "./middlewares/auth.middleware";
 
 export const app = new Elysia()
-  // Enable CORS
+  // === GLOBAL MIDDLEWARE SETUP ===
   .use(
     cors({
       origin: ["http://localhost:*", "https://*.example.com"],
@@ -19,59 +20,117 @@ export const app = new Elysia()
       credentials: true,
     })
   )
-  // Apply rate limiting
   .use(
     rateLimit({
-      max: 100, // 100 requests
-      windowMs: 60 * 1000, // per minute
+      max: 100,
+      windowMs: 60 * 1000,
       message: "Too many requests from this IP, please try again later",
     })
   )
-  // Setup JWT
   .use(
     jwt({
       name: "jwt",
       secret: process.env.JWT_SECRET || "your-secret-key",
     })
   )
-  // Welcome endpoint with API information
-  .get(
-    "/",
-    () => {
-      return ResponseHandler.success(
-        {
-          name: "User Management API",
-          version: "1.0.0",
-          description: "API for user management and authentication",
-          docs: "/docs",
-          endpoints: {
-            auth: "/auth/* - Authentication endpoints",
-            users: "/users/* - User management endpoints",
-          },
-          status: "online",
+  .derive(({ headers, jwt }) => extractUser({ headers, jwt }))
+  // === PUBLIC ENDPOINTS ===
+  .group("", (app) =>
+    app
+      .get(
+        "/",
+        () => {
+          return ResponseHandler.success(
+            {
+              name: "User Management API",
+              version: "1.0.0",
+              description: "API for user management and authentication",
+              docs: "/docs",
+              endpoints: {
+                auth: "/api/v1/auth/* - Authentication endpoints",
+                users: "/api/v1/users/* - User management endpoints",
+              },
+              status: "online",
+            },
+            "Welcome to User Management API"
+          );
         },
-        "Welcome to User Management API"
-      );
-    },
-    {
-      detail: {
-        summary: "API Information",
-        description: "Get general information about the API",
-        tags: ["General"],
-      },
-    }
+        {
+          detail: {
+            summary: "API Information",
+            description: "Get general information about the API",
+            tags: ["General"],
+          },
+        }
+      )
+      .get(
+        "/health",
+        () => {
+          return ResponseHandler.success(
+            {
+              status: "healthy",
+              timestamp: new Date().toISOString(),
+              uptime: process.uptime(),
+            },
+            "Service is healthy"
+          );
+        },
+        {
+          detail: {
+            summary: "Health Check",
+            description: "Check service health status",
+            tags: ["General"],
+          },
+        }
+      )
   )
-  // Enable Swagger documentation
+
+  // === DOCUMENTATION ===
   .use(swagger(swaggerConfig))
 
-  // Register controllers
-  .use([UserController, AuthController])
+  // === API VERSION 1 ===
+  .group("/api/v1", (app) =>
+    app
+      // Authentication routes
+      .group("/auth", (app) => app.use(AuthController))
 
-  // Error handling
+      // User management routes
+      .group("/users", (app) => app.use(UserController))
+  )
+
+  // === ADMIN PANEL (if needed) ===
+  .group("/admin", (app) =>
+    app
+      // Admin-specific endpoints can go here
+      .get(
+        "/stats",
+        () => {
+          return ResponseHandler.success(
+            {
+              totalRequests: 0, // Add real stats
+              activeUsers: 0,
+              systemInfo: {
+                nodeVersion: process.version,
+                platform: process.platform,
+              },
+            },
+            "Admin statistics"
+          );
+        },
+        {
+          detail: {
+            summary: "Admin Statistics",
+            description: "Get system statistics (Admin only)",
+            tags: ["Admin"],
+          },
+        }
+      )
+  )
+
+  // === GLOBAL ERROR HANDLING ===
   .onError(({ code, error }) => {
     console.error(`[${code}]`, error);
 
-    // จัดการ error แต่ละประเภท
     switch (code) {
       case "NOT_FOUND":
         return ResponseHandler.notFound("Endpoint not found");

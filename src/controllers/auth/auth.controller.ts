@@ -1,16 +1,15 @@
 import Elysia, { t } from "elysia";
-import { User } from "../../interfaces/user";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserRepo } from "../../repositories/user.repo";
 import { loginSchemaUser } from "../../spreads/user.spread";
 import { JwtUtils } from "../../utils/jwt.utils";
-import { requireAuth } from "../../middlewares/auth.middleware";
 import {
   changePasswordSchemaDocs,
   loginSchemaUserDocs,
   logoutSchemaDocs,
   refreshTokenSchemaDocs,
 } from "../../docs/auth.docs";
+import { authProfile } from "../../interfaces/auth";
 
 const userRepo = new UserRepo();
 
@@ -40,7 +39,7 @@ const changePasswordSchema = t.Object({
   }),
 });
 
-export const AuthController = new Elysia({ prefix: "/auth" })
+export const AuthController = new Elysia()
   .post(
     "/login",
     async ({ body, set }) => {
@@ -76,6 +75,7 @@ export const AuthController = new Elysia({ prefix: "/auth" })
         const payload = {
           id: user.id,
           username: user.username,
+          email: user.email,
         };
         // สร้าง JWT token และ refresh token สำหรับ user
         const { accessToken, refreshToken } = await JwtUtils.generateTokens(
@@ -170,10 +170,9 @@ export const AuthController = new Elysia({ prefix: "/auth" })
   )
 
   // แอนด์พอยท์สำหรับเปลี่ยนรหัสผ่าน
-  .use(requireAuth)
   .post(
     "/change-password",
-    async ({ body, user, set }) => {
+    async ({ body, user, set }: { body: any ; user: authProfile; set: any }) => {
       try {
         const { currentPassword, newPassword, confirmNewPassword } = body;
 

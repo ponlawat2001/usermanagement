@@ -15,13 +15,10 @@ import {
 import { createSchemaUser, updateSchemaUser } from "../../spreads/user.spread";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserService } from "../../services/user/user.service";
-import { User } from "../../interfaces/user";
 
 const userService = new UserService();
 
-export const UserController = new Elysia({ prefix: "/users" })
-  // Get all users - Requires authentication and admin role
-  .use(requireRole("admin"))
+export const UserController = new Elysia()
   .get(
     "/findAll",
     async ({ set }) => {
@@ -34,11 +31,10 @@ export const UserController = new Elysia({ prefix: "/users" })
     },
     {
       detail: getAllUsersDocs,
+      beforeHandle: (context: any) => requireRole(context.user, "admin"),
     }
   )
 
-  // Get user by ID - Requires authentication
-  .use(requireAuth)
   .get(
     "/:id",
     async ({ params, set }) => {
@@ -60,7 +56,7 @@ export const UserController = new Elysia({ prefix: "/users" })
   // Create new user
   .post(
     "/register",
-    async ({ body , set }) => {
+    async ({ body, set }) => {
       try {
         const newUser = await userService.createUser(body);
         set.status = 201; // OK
@@ -92,7 +88,7 @@ export const UserController = new Elysia({ prefix: "/users" })
   // Update user - Requires authentication
   .patch(
     "/:id",
-    async ({ params, body , set }) => {
+    async ({ params, body, set }) => {
       try {
         const updatedUser = await userService.updateUser(params.id, body);
         if (!updatedUser) {
@@ -126,13 +122,11 @@ export const UserController = new Elysia({ prefix: "/users" })
     }
   )
 
-  // Delete user - Requires authentication and admin role
-  .use(requireRole("admin"))
   .delete(
     "/:id",
-    async ({ params , set }) => {
+    async ({ params, set }) => {
       if (!params.id) {
-        set.status = 400; // Bad Request 
+        set.status = 400; // Bad Request
         return ResponseHandler.notFound("User ID is required");
       }
       const result = await userService.deleteUser(params.id);
