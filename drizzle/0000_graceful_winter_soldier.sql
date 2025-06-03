@@ -1,0 +1,20 @@
+CREATE TABLE "user" (
+	"id" text PRIMARY KEY NOT NULL,
+	"username" text NOT NULL,
+	"fullname" text NOT NULL,
+	"password" text NOT NULL,
+	"email" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now(),
+	"updated_at" timestamp with time zone DEFAULT now(),
+	"deleted_at" timestamp with time zone,
+	"last_login" timestamp with time zone,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"is_suspend" boolean DEFAULT false NOT NULL,
+	"is_banned" boolean DEFAULT false NOT NULL,
+	"google_id" text,
+	"discord_id" text,
+	"github_id" text,
+	"instragram_id" text,
+	"role" text DEFAULT 'user' NOT NULL,
+	CONSTRAINT "user_username_unique" UNIQUE("username")
+);

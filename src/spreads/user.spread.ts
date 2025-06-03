@@ -1,6 +1,7 @@
 import { t } from "elysia";
 import { spread } from "../database/utils";
 import { user } from "../schemas/user";
+import { ResponseHandler } from "../utils/response.utils";
 
 // ใช้ spread เพื่อแปลง Drizzle schema ให้เข้ากับ Elysia t.Object
 export const userInsertSchema = spread(user, "insert");
@@ -14,14 +15,14 @@ export const createSchemaUser = t.Object({
     minLength: 3,
     maxLength: 30,
     pattern: '^[a-zA-Z0-9_]+$',
-    error: 'Username must be 3-30 characters and can only contain letters, numbers, and underscores'
+    error: ResponseHandler.error('Username must be 3-30 characters and can only contain letters, numbers, and underscores', 422)
   }),
   fullname: t.String({
     description: 'Full name of the user',
     examples: ['John Doe'],
     minLength: 2,
     maxLength: 100,
-    error: 'Full name must be 2-100 characters'
+    error: ResponseHandler.error('Full name must be 2-100 characters', 422)
   }),
   password: t.String({
     description: 'User password (will be hashed before storage)',
@@ -29,13 +30,13 @@ export const createSchemaUser = t.Object({
     maxLength: 100,
     pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$',
     examples: ['SecureP@ss123'],
-    error: 'Password must be 8-100 characters and include at least one uppercase letter, one lowercase letter, and one number'
+    error: ResponseHandler.error('Password must be 8-100 characters and include at least one uppercase letter, one lowercase letter, and one number', 422)
   }),
   email: t.String({
     description: 'Email address of the user',
     format: 'email',
     examples: ['john@example.com'],
-    error: 'Please provide a valid email address'
+    error: ResponseHandler.error('Please provide a valid email address', 422)
   }),
 }, {
   description: 'Data required to create a new user account'
@@ -75,13 +76,13 @@ export const loginSchemaUser = t.Object({
     description: 'Username or email address for login',
     examples: ['johndoe', 'john@example.com'],
     minLength: 3,
-    error: 'Please enter a valid username or email'
+    error: ResponseHandler.error('Please enter a valid username or email', 422)
   }),
   password: t.String({
     description: 'User password',
     examples: ['********'],
     minLength: 8,
-    error: 'Password must be at least 8 characters'
+    error: ResponseHandler.error('Password must be at least 8 characters long', 422)
   })
 }, {
   description: 'Credentials required for user login'
@@ -94,13 +95,13 @@ export const updateSchemaUser = t.Object({
     examples: ['John Smith'],
     minLength: 2,
     maxLength: 100,
-    error: 'Full name must be 2-100 characters'
+    error: ResponseHandler.error('Full name must be 2-100 characters', 422)
   })),
   email: t.Optional(t.String({
     description: 'New email address of the user',
     format: 'email',
     examples: ['john.smith@example.com'],
-    error: 'Please provide a valid email address'
+    error: ResponseHandler.error('Please provide a valid email address', 422)
   })),
   password: t.Optional(t.String({
     description: 'New password (will be hashed before storage)',
@@ -108,7 +109,7 @@ export const updateSchemaUser = t.Object({
     maxLength: 100,
     pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$',
     examples: ['NewSecureP@ss456'],
-    error: 'Password must be 8-100 characters and include at least one uppercase letter, one lowercase letter, and one number'
+    error: ResponseHandler.error('Password must be 8-100 characters and include at least one uppercase letter, one lowercase letter, and one number', 422)
   })),
   isActive: t.Optional(t.Boolean({
     description: 'Whether the user account is active',

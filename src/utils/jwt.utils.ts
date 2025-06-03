@@ -35,14 +35,14 @@ export class JwtUtils {
   static async generateTokens(user: Partial<User>): Promise<{ accessToken: string, refreshToken: string }> {
     // สร้าง payload โดยไม่รวมข้อมูลที่ละเอียดอ่อน เช่น รหัสผ่าน
     const payload = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
+      id: user.id || '',
+      username: user.username || '',
+      email: user.email || '',
       role: user.role || 'user'
     };
     
     // สร้าง access token
-    const accessToken = await jwtInstance.sign(payload);
+    const accessToken = await jwtInstance.decorator['auth-token'].sign(payload);
     
     // สร้าง refresh token
     const refreshToken = crypto.randomBytes(40).toString('hex');
@@ -79,7 +79,7 @@ export class JwtUtils {
     const userId = storedToken.userId;
     
     // สร้าง access token ใหม่
-    const accessToken = await jwtInstance.sign({ id: userId });
+    const accessToken = await jwtInstance.decorator['auth-token'].sign({ id: userId });
     
     return { accessToken };
   }
@@ -108,7 +108,7 @@ export class JwtUtils {
    */
   static async verifyToken(token: string): Promise<any> {
     try {
-      return await jwtInstance.verify(token);
+      return await jwtInstance.decorator['auth-token'].verify(token);
     } catch (error: any) {
       throw new Error(`Invalid token: ${error.message}`);
     }

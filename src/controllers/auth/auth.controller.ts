@@ -2,336 +2,230 @@ import Elysia, { t } from "elysia";
 import { User } from "../../interfaces/user";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserRepo } from "../../repositories/user.repo";
-import { loginSchemaUser } from "../../schemas/user/user.schema";
+import { loginSchemaUser } from "../../spreads/user.spread";
 import { JwtUtils } from "../../utils/jwt.utils";
 import { requireAuth } from "../../middlewares/auth.middleware";
-import { 
-  loginSuccessExample, refreshTokenExample, unauthorizedExample, 
-  notFoundExample, validationErrorExample, serverErrorExample,
-  successNoDataExample
-} from "../../configs/swagger-examples";
-import { loginSchemaUserDocs } from "../../docs/auth.docs";
+import {
+  changePasswordSchemaDocs,
+  loginSchemaUserDocs,
+  logoutSchemaDocs,
+  refreshTokenSchemaDocs,
+} from "../../docs/auth.docs";
 
 const userRepo = new UserRepo();
 
 // สร้าง schema สำหรับ refresh token
 const refreshTokenSchema = t.Object({
   refreshToken: t.String({
-    description: 'The refresh token issued during login',
-    minLength: 10
-  })
+    description: "The refresh token issued during login",
+    minLength: 10,
+  }),
 });
 
 // สร้าง schema สำหรับเปลี่ยนรหัสผ่าน
 const changePasswordSchema = t.Object({
   currentPassword: t.String({
-    description: 'Current password',
-    minLength: 6
+    description: "Current password",
+    minLength: 6,
   }),
   newPassword: t.String({
-    description: 'New password',
+    description: "New password",
     minLength: 8,
-    maxLength: 100
+    maxLength: 100,
   }),
   confirmNewPassword: t.String({
-    description: 'Confirm new password',
+    description: "Confirm new password",
     minLength: 8,
-    maxLength: 100
-  })
+    maxLength: 100,
+  }),
 });
 
 export const AuthController = new Elysia({ prefix: "/auth" })
-  .post("/login", 
-    async ({ body }) => {
+  .post(
+    "/login",
+    async ({ body, set }) => {
       const { usernameOrEmail, password } = body;
-      
+
       // ตรวจสอบการเข้าสู่ระบบ
       try {
         // ค้นหา user จาก username หรือ email
         const user = await userRepo.findByUsernameOrEmail(usernameOrEmail);
-        
+
         if (!user) {
-          return ResponseHandler.unauthorized("Invalid username/email or password");
+          set.status = 401; // Unauthorized
+          return ResponseHandler.unauthorized(
+            "Invalid username/email or password"
+          );
         }
-        
+
         // ตรวจสอบรหัสผ่านโดยใช้ Bun.password.verify เพื่อเปรียบเทียบรหัสผ่านที่เข้ารหัสแล้ว
         let isPasswordValid = false;
         try {
           isPasswordValid = await Bun.password.verify(password, user.password);
         } catch (err) {
-          console.error('Password verification error:', err);
+          console.error("Password verification error:", err);
           isPasswordValid = false;
         }
-        
+
         if (!isPasswordValid) {
-          return ResponseHandler.unauthorized("Invalid username/email or password");
+          set.status = 401;
+          return ResponseHandler.unauthorized(
+            "Invalid username/email or password"
+          );
         }
-        
+        const payload = {
+          id: user.id,
+          username: user.username,
+        };
         // สร้าง JWT token และ refresh token สำหรับ user
-        const { accessToken, refreshToken } = await JwtUtils.generateTokens(user);
-        
+        const { accessToken, refreshToken } = await JwtUtils.generateTokens(
+          payload
+        );
         // สร้าง response สำหรับการเข้าสู่ระบบสำเร็จ พร้อมกับ token
-        return ResponseHandler.success({
-          accessToken,
-          refreshToken,
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            role: user.role || 'user'
-          }
-        }, "Login successful");
+        set.status = 200; // OK
+        return ResponseHandler.success(
+          {
+            accessToken,
+            refreshToken,
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: user.role || "user",
+            },
+          },
+          "Login successful"
+        );
       } catch (error: any) {
+        set.status = 500; // Internal Server Error
         return ResponseHandler.serverError(error.message || "Login failed");
       }
     },
     {
       body: loginSchemaUser,
-      detail: loginSchemaUserDocs
+      detail: loginSchemaUserDocs,
     }
   )
-  
+
   // แอนด์พอยท์สำหรับ refresh token
-  .post("/refresh-token",
-    async ({ body }) => {
+  .post(
+    "/refresh-token",
+    async ({ body, set }) => {
       try {
         const { refreshToken } = body;
-        
+
         // สร้าง access token ใหม่จาก refresh token
         const result = await JwtUtils.refreshAccessToken(refreshToken);
-        
+
         if (!result) {
-          return ResponseHandler.unauthorized("Invalid or expired refresh token");
+          set.status = 401; // Unauthorized
+          return ResponseHandler.unauthorized(
+            "Invalid or expired refresh token"
+          );
         }
-        
+
         // ส่ง access token ใหม่กลับไป
-        return ResponseHandler.success({
-          accessToken: result.accessToken
-        }, "Token refreshed successfully");
+        set.status = 200; // OK
+        return ResponseHandler.success(
+          {
+            accessToken: result.accessToken,
+          },
+          "Token refreshed successfully"
+        );
       } catch (error: any) {
-        return ResponseHandler.serverError(error.message || "Failed to refresh token");
+        set.status = 500; // Internal Server Error
+        return ResponseHandler.serverError(
+          error.message || "Failed to refresh token"
+        );
       }
     },
     {
       body: refreshTokenSchema,
-      detail: {
-        summary: 'Refresh access token',
-        description: 'Generate a new access token using a valid refresh token',
-        tags: ['Authentication'],
-        responses: {
-          '200': {
-            description: 'Token refreshed successfully',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Object({
-                    accessToken: t.String()
-                  })
-                }),
-                example: refreshTokenExample
-              }
-            }
-          },
-          '401': {
-            description: 'Invalid or expired refresh token',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: unauthorizedExample
-              }
-            }
-          },
-          '500': {
-            description: 'Internal server error',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: serverErrorExample
-              }
-            }
-          }
-        }
-      }
+      detail: refreshTokenSchemaDocs,
     }
   )
-  
+
   // แอนด์พอยท์สำหรับออกจากระบบ
-  .post("/logout",
-    async ({ body }) => {
+  .post(
+    "/logout",
+    async ({ body, set }) => {
       try {
         const { refreshToken } = body;
-        
         // ยกเลิก refresh token
         JwtUtils.revokeRefreshToken(refreshToken);
-        
+
+        set.status = 200; // OK
         return ResponseHandler.success(null, "Logged out successfully");
       } catch (error: any) {
-        return ResponseHandler.serverError(error.message || "Failed to log out");
+        set.status = 500; // Internal Server Error
+        return ResponseHandler.serverError(
+          error.message || "Failed to log out"
+        );
       }
     },
     {
       body: refreshTokenSchema,
-      detail: {
-        summary: 'Logout',
-        description: 'Invalidate the refresh token',
-        tags: ['Authentication'],
-        responses: {
-          '200': {
-            description: 'Logged out successfully',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: successNoDataExample
-              }
-            }
-          },
-          '500': {
-            description: 'Internal server error',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: serverErrorExample
-              }
-            }
-          }
-        }
-      }
+      detail: logoutSchemaDocs,
     }
   )
-  
+
   // แอนด์พอยท์สำหรับเปลี่ยนรหัสผ่าน
   .use(requireAuth)
-  .post("/change-password",
-    async ({ body, user }) => {
+  .post(
+    "/change-password",
+    async ({ body, user, set }) => {
       try {
         const { currentPassword, newPassword, confirmNewPassword } = body;
-        
+
         // ตรวจสอบว่า newPassword และ confirmNewPassword ตรงกัน
         if (newPassword !== confirmNewPassword) {
           return ResponseHandler.validationError("New passwords do not match");
         }
-        
+
         // ค้นหา user จากฐานข้อมูล
         const userRecord = await userRepo.findById(user.id);
-        
+
         if (!userRecord) {
+          set.status = 404; // Not Found
           return ResponseHandler.notFound("User not found");
         }
-        
+
         // ตรวจสอบรหัสผ่านปัจจุบัน
         let isValidPassword = false;
         try {
-          isValidPassword = await Bun.password.verify(currentPassword, userRecord.password);
+          isValidPassword = await Bun.password.verify(
+            currentPassword,
+            userRecord.password
+          );
         } catch (err) {
+          set.status = 500; // Internal Server Error
           console.error("Password verification error:", err);
         }
-        
+
         if (!isValidPassword) {
-          return ResponseHandler.validationError("Current password is incorrect");
+          set.status = 400; // Bad Request
+          return ResponseHandler.validationError(
+            "Current password is incorrect"
+          );
         }
-        
+
         // เข้ารหัสรหัสผ่านใหม่
         const hashedPassword = await Bun.password.hash(newPassword);
-        
+
         // อัพเดทรหัสผ่านในฐานข้อมูล
         await userRepo.updatePassword(user.id, hashedPassword);
-        
+
+        set.status = 200; // OK
         return ResponseHandler.success(null, "Password changed successfully");
       } catch (error: any) {
-        return ResponseHandler.serverError(error.message || "Failed to change password");
+        set.status = 500; // Internal Server Error
+        return ResponseHandler.serverError(
+          error.message || "Failed to change password"
+        );
       }
     },
     {
       body: changePasswordSchema,
-      detail: {
-        summary: 'Change password',
-        description: 'Change user password with validation',
-        tags: ['Authentication'],
-        responses: {
-          '200': {
-            description: 'Password changed successfully',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: successNoDataExample
-              }
-            }
-          },
-          '401': {
-            description: 'Authentication required',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: unauthorizedExample
-              }
-            }
-          },
-          '422': {
-            description: 'Validation error (passwords do not match or incorrect current password)',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: validationErrorExample
-              }
-            }
-          },
-          '404': {
-            description: 'User not found',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: notFoundExample
-              }
-            }
-          },
-          '500': {
-            description: 'Internal server error',
-            content: {
-              'application/json': {
-                schema: t.Object({
-                  status: t.Number(),
-                  message: t.String(),
-                  data: t.Null()
-                }),
-                example: serverErrorExample
-              }
-            }
-          }
-        }
-      }
+      detail: changePasswordSchemaDocs,
     }
-  )
+  );

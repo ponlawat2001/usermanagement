@@ -1,8 +1,8 @@
-import { table } from "../schemas/schema";
+import { user } from "../schemas/user";
 import { db } from "../database/database";
 import { eq, and, isNull, or } from "drizzle-orm";
-import { createId } from "@paralleldrive/cuid2";
 import { User } from "../interfaces/user";
+import { createId } from "@paralleldrive/cuid2";
 
 // สร้างฟังก์ชันเข้ารหัส password แบบง่าย
 // ในโปรดักชันควรใช้ bcrypt หรือ argon2 แทน
@@ -17,10 +17,7 @@ export class UserRepo {
   // ดึงข้อมูล user ทั้งหมด (ไม่รวม user ที่ถูกลบ)
   async findAll() {
     try {
-      const users = await db
-        .select()
-        .from(table.user)
-        .where(isNull(table.user.deletedAt));
+      const users = await db.select().from(user).where(isNull(user.deletedAt));
       return users;
     } catch (error) {
       console.error("Error fetching all users:", error);
@@ -31,11 +28,11 @@ export class UserRepo {
   // ดึงข้อมูล user ตาม id
   async findById(id: string) {
     try {
-      const [user] = await db
+      const [userinfo] = await db
         .select()
-        .from(table.user)
-        .where(and(eq(table.user.id, id), isNull(table.user.deletedAt)));
-      return user;
+        .from(user)
+        .where(and(eq(user.id, id), isNull(user.deletedAt)));
+      return userinfo;
     } catch (error) {
       console.error(`Error fetching user with id ${id}:`, error);
       throw new Error("Failed to fetch user");
@@ -45,22 +42,22 @@ export class UserRepo {
   // ดึงข้อมูล user ตาม username หรือ email (สำหรับ login)
   async findByUsernameOrEmail(usernameOrEmail: string) {
     try {
-      const [user] = await db
+      const [userinfo] = await db
         .select()
-        .from(table.user)
+        .from(user)
         .where(
           and(
-            isNull(table.user.deletedAt),
-            eq(table.user.isActive, true),
-            eq(table.user.isBanned, false),
-            eq(table.user.isSuspend, false),
+            isNull(user.deletedAt),
+            eq(user.isActive, true),
+            eq(user.isBanned, false),
+            eq(user.isSuspend, false),
             or(
-              eq(table.user.email, usernameOrEmail),
-              eq(table.user.username, usernameOrEmail)
+              eq(user.email, usernameOrEmail),
+              eq(user.username, usernameOrEmail)
             )
           )
         );
-      return user;
+      return userinfo;
     } catch (error) {
       console.error(
         `Error fetching user with username/email ${usernameOrEmail}:`,
@@ -71,95 +68,72 @@ export class UserRepo {
   }
 
   // สร้าง user ใหม่
-  async create(data: User) {
-    console.log("Creating user with data:", data);
+  async create(data: Partial<User>) {
     try {
       // เข้ารหัส password ก่อนบันทึก
+      if (!data.password) {
+        throw new Error("Password is required");
+      }
       const hashedPassword = await hashPassword(data.password);
-
-      // Generate an ID
       const userId = createId();
 
-      // Insert user with all required fields
-      const user = await db
-        .insert(table.user)
-        .values({
-          id: userId,
-          username: data.username,
-          fullname: data.fullname,
-          password: hashedPassword,
-          email: data.email,
-          role: data.role || "user",
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
+      // ใช้เฉพาะ fields ที่จำเป็น ไม่รวม id ให้ database generate เอง
+      const insertData = {
+        id: userId,
+        username: data.username ?? "",
+        email: data.email ?? "",
+        password: hashedPassword,
+        fullname: data.fullname ?? "",
+      };
+      console.log("Creating user with data:", insertData);
+      const createdUser = await db.insert(user).values(insertData).returning();
 
-      return user;
+      return createdUser;
     } catch (error) {
       console.error("Error creating user:", error);
-      throw new Error("Failed to create user");
+      throw new Error(`Failed to create user: ${error}`);
     }
   }
 
   // อัพเดทข้อมูล user
   async update(id: string, data: any) {
-    try {
-      // ถ้ามีการอัพเดท password ให้เข้ารหัสก่อน
-      if (data.password) {
-        data.password = await hashPassword(data.password);
-      }
-
-      // เพิ่ม updatedAt timestamp
-      data.updatedAt = new Date();
-
-      const [updatedUser] = await db
-        .update(table.user)
-        .set(data)
-        .where(eq(table.user.id, id))
-        .returning();
-
-      return updatedUser;
-    } catch (error) {
-      console.error(`Error updating user with id ${id}:`, error);
-      throw new Error("Failed to update user");
+    // ถ้ามีการอัพเดท password ให้เข้ารหัสก่อน
+    if (data.password) {
+      data.password = await hashPassword(data.password);
     }
+
+    const [updatedUser] = await db
+      .update(user)
+      .set(data)
+      .where(eq(user.id, id))
+      .returning();
+
+    return updatedUser;
   }
 
   // ลบข้อมูล user (soft delete)
   async delete(id: string) {
-    try {
-      await db
-        .update(table.user)
-        .set({
-          deletedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(table.user.id, id));
+    await db
+      .update(user)
+      .set({
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, id));
 
-      return { success: true };
-    } catch (error) {
-      console.error(`Error deleting user with id ${id}:`, error);
-      throw new Error("Failed to delete user");
-    }
+    return { success: true };
   }
 
   // อัพเดทเฉพาะรหัสผ่านของ user
   async updatePassword(id: string | number, hashedPassword: string) {
-    try {
-      await db
-        .update(table.user)
-        .set({
-          password: hashedPassword,
-          updatedAt: new Date(),
-        })
-        .where(eq(table.user.id, id.toString()));
+    await db
+      .update(user)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, id.toString()));
 
-      return { success: true };
-    } catch (error) {
-      console.error(`Error updating password for user with id ${id}:`, error);
-      throw new Error("Failed to update password");
-    }
+    return { success: true };
   }
 }
