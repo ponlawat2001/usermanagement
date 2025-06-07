@@ -6,7 +6,7 @@ import { SwaggerDetails } from '../interfaces/swagger'
 
 export const apiInformationDocs = {
   summary: 'API Information',
-  description: 'Get general information about the API',
+  description: 'Get comprehensive information about the UserBase API',
   tags: ['General'],
   responses: {
     '200': {
@@ -14,16 +14,47 @@ export const apiInformationDocs = {
       content: {
         'application/json': {
           schema: t.Object({
-            success: t.Boolean(),
+            status: t.Number(),
             message: t.String(),
             data: t.Object({
               name: t.String(),
               version: t.String(),
               description: t.String(),
+              documentation: t.String(),
+              repository: t.String(),
+              author: t.String(),
+              license: t.String(),
+              runtime: t.String(),
+              framework: t.String(),
+              database: t.String(),
+              features: t.Array(t.String()),
+              endpoints: t.Object({
+                root: t.String(),
+                health: t.String(),
+                auth: t.Object({
+                  login: t.String(),
+                  refresh: t.String(),
+                  logout: t.String(),
+                  changePassword: t.String(),
+                }),
+                users: t.Object({
+                  register: t.String(),
+                  findAll: t.String(),
+                  findById: t.String(),
+                  update: t.String(),
+                  delete: t.String(),
+                }),
+              }),
+              security: t.Object({
+                authentication: t.String(),
+                passwordHashing: t.String(),
+                rateLimiting: t.String(),
+                cors: t.String(),
+              }),
               environment: t.String(),
-              apiVersion: t.String(),
-              documentationUrl: t.String(),
-              contactEmail: t.String(),
+              timestamp: t.String(),
+              uptime: t.String(),
+              status: t.String(),
             }),
           }),
           example: apiInformationExample,
