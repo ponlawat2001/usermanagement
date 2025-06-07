@@ -1,4 +1,4 @@
-import Elysia from "elysia";
+import Elysia, { ValidationError } from "elysia";
 import { requireAuth, requireRole } from "../../middlewares/auth.middleware";
 
 import {
@@ -16,6 +16,7 @@ import {
 import { createSchemaUser, updateSchemaUser } from "../../validations/user.validation";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserService } from "../../services/user/user.service";
+import { authProfile } from "../../interfaces/auth";
 
 const userService = new UserService();
 
@@ -56,7 +57,7 @@ export const UserController = new Elysia()
 
   .get(
     "/me",
-    async ({ user, set }) => {
+    async ({ user, set } : { user: authProfile , set: any}) => {
       if (!user) {
         set.status = 401; // Unauthorized
         return ResponseHandler.unauthorized("User not authenticated");
@@ -89,7 +90,7 @@ export const UserController = new Elysia()
         );
       } catch (error: any) {
         // Check error message to provide appropriate response
-        if (error.message?.includes("duplicate")) {
+        if (error.message?.includes("exists")) {
           set.status = 400; // Bad Request
           return ResponseHandler.validationError(
             "Username or email already exists"

@@ -10,7 +10,7 @@ import {
 } from "../../docs/auth.docs";
 import { authProfile } from "../../interfaces/auth";
 import { UserService } from "../../services/user/user.service";
-import { common } from "../../utils/common";
+import { common } from "../../utils/common.utils";
 
 // สร้าง schema สำหรับ refresh token
 const refreshTokenSchema = t.Object({

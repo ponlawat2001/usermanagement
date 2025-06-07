@@ -4,8 +4,7 @@ import { db } from "../../database/database";
 import { User } from "../../interfaces/user";
 import { user } from "../../schemas/user";
 import { createId } from "@paralleldrive/cuid2";
-import { common } from "../../utils/common";
-
+import { common } from "../../utils/common.utils";
 
 export class UserService {
   async findAll() {
@@ -58,34 +57,40 @@ export class UserService {
   }
 
   async createUser(userData: Partial<User>) {
-    // Validate required fields
-    if (!userData.username || !userData.email || !userData.password) {
-      throw new Error("Username, email, and password are required");
-    }
+    try {
+      // Validate required fields
+      if (!userData.username || !userData.email || !userData.password) {
+        throw new Error("Username, email, and password are required");
+      }
 
-    // Check for existing username or email
-    const existingUser = await this.findByUsernameOrEmail(userData.username);
-    if (existingUser) {
-      throw new Error("Username already exists");
-    }
+      // Check for existing username or email
+      const existingUser = await this.findByUsernameOrEmail(userData.username);
+      if (existingUser) {
+        throw new Error("Username already exists");
+      }
 
-    const existingEmail = await this.findByUsernameOrEmail(userData.email);
-    if (existingEmail) {
-      throw new Error("Email already exists");
-    }
+      const existingEmail = await this.findByUsernameOrEmail(userData.email);
+      if (existingEmail) {
+        throw new Error("Email already exists");
+      }
 
-    const hashedPassword = await common.hashPassword(userData.password ?? "");
-    const createdUser = await db
-      .insert(user)
-      .values({
-        id: createId(),
-        username: userData.username ?? "",
-        email: userData.email ?? "",
-        password: hashedPassword,
-        fullname: userData.fullname ?? "",
-      })
-      .returning();
-    return createdUser as unknown as User;
+      const hashedPassword = await common.hashPassword(userData.password ?? "");
+
+      const createdUser = await db
+        .insert(user)
+        .values({
+          id: createId(),
+          username: userData.username ?? "",
+          email: userData.email ?? "",
+          password: hashedPassword,
+          fullname: userData.fullname ?? "",
+        })
+        .returning();
+      return createdUser as unknown as User;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw new Error("Failed to create user");
+    }
   }
 
   async updateUser(id: string, userData: Partial<User>) {
