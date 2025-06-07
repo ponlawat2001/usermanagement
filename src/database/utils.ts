@@ -54,8 +54,8 @@ export const spread = <
 
             table =
                 mode === 'insert'
-                    ? createInsertSchema(schema)
-                    : createSelectSchema(schema)
+                    ? createInsertSchema(schema as any)
+                    : createSelectSchema(schema as any)
 
             break
 

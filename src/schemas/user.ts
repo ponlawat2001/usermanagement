@@ -1,24 +1,27 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { createId } from '@paralleldrive/cuid2';
+import { boolean, pgTable, text ,serial, uniqueIndex, date, timestamp } from "drizzle-orm/pg-core";
+import { createId } from "@paralleldrive/cuid2";
 
 export const user = pgTable("user", {
-  id: text("id")
-    .$defaultFn(() => createId())
-    .primaryKey(),
-  username: text("username").notNull().unique(),
+  id: text('id').primaryKey().default(createId()),
+  username: text("username").notNull(),
   fullname: text("fullname").notNull(),
   password: text("password").notNull(),
-  email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  lastLogin: timestamp("last_login", { withTimezone: true }),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+  lastLogin: timestamp("last_login"),
   isActive: boolean("is_active").notNull().default(true),
   isSuspend: boolean("is_suspend").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),
   googleId: text("google_id"),
   discordId: text("discord_id"),
   githubId: text("github_id"),
-  instragramId: text("instragram_id"),
+  instagramId: text("instagram_id"),
   role: text("role").notNull().default("user"),
-});
+},
+(table) => [
+  uniqueIndex("emailUniqueIndex").on(table.email),
+  uniqueIndex("usernameUniqueIndex").on(table.username),
+]
+);

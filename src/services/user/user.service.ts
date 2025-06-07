@@ -1,28 +1,35 @@
+import { sql } from "drizzle-orm";
+import { isNull } from "drizzle-orm";
+import { db } from "../../database/database";
 import { User } from "../../interfaces/user";
-import { UserRepo } from "../../repositories/user.repo";
+import { user } from "../../schemas/user";
+import { createId } from "@paralleldrive/cuid2";
+import { common } from "../../utils/common";
+
 
 export class UserService {
-  constructor(private userRepo: UserRepo = new UserRepo()) {}
-
-  async findAll(): Promise<User[] | []> {
+  async findAll() {
     // เรียกใช้ repository method โดยตรง
     try {
-      const users = await this.userRepo.findAll();
-      return users as unknown as User[];
+      const users = await db.select().from(user).where(isNull(user.deletedAt));
+      return users;
     } catch (error) {
       console.error("Error fetching users:", error);
       throw new Error("Failed to fetch users");
     }
   }
 
-  async findById(id: string): Promise<User | null> {
+  async findById(id: string) {
     try {
-      const user = await this.userRepo.findById(id);
-      if (!user) {
+      const userinfo = await db
+        .select()
+        .from(user)
+        .where(sql`${user.id} = ${id} AND ${user.deletedAt} IS NULL`);
+      if (!userinfo || userinfo.length === 0) {
         console.warn(`User with id ${id} not found`);
         return null;
       } else {
-        return user as unknown as User;
+        return userinfo[0] as unknown as User;
       }
     } catch (error) {
       console.error(`Error fetching user with id ${id}:`, error);
@@ -30,52 +37,92 @@ export class UserService {
     }
   }
 
-  async createUser(userData: Partial<User>): Promise<User | {}> {
+  async findByUsernameOrEmail(usernameOrEmail: string) {
     try {
-      // Validate required fields
-      if (!userData.username || !userData.email || !userData.password) {
-        throw new Error("Username, email, and password are required");
+      const userInfo = await db
+        .select()
+        .from(user)
+        .where(
+          sql`(${user.username} = ${usernameOrEmail} OR ${user.email} = ${usernameOrEmail}) AND ${user.deletedAt} IS NULL`
+        );
+      if (!userInfo || userInfo.length === 0) {
+        return null;
+      } else {
+        return userInfo[0] as unknown as User;
       }
-      // Check for duplicate username or email
-      const duplicateUser = await this.userRepo.findByUsernameOrEmail(
-        userData.username
-      );
-
-      // Check for duplicate username or email
-      const duplicateEmail = await this.userRepo.findByUsernameOrEmail(
-        userData.email
-      );
-
-      if (duplicateUser) {
-        console.warn(
-          `User with username ${userData.username} or email ${userData.email} already exists`
-        );
-        throw new Error(
-          `duplicate user with username ${userData.username}`
-        );
-      }
-
-      if (duplicateEmail) {
-        console.warn(
-          `User with email ${userData.email} already exists`
-        );
-        throw new Error(
-          `duplicate user with email ${userData.email}`
-        );
-      }
-      
-      // เรียกใช้ repository method โดยตรง
-      const createdUser = await this.userRepo.create(userData);
-      return createdUser;
     } catch (error) {
-      console.error("Service error creating user:", error);
-      throw new Error(`Failed to create user: ${error}`);
+      throw new Error(
+        `Failed to fetch user with username or email ${usernameOrEmail}`
+      );
     }
   }
 
-  async updateUser(id: string, userData: any): Promise<User | null> {
+  async createUser(userData: Partial<User>) {
+    // Validate required fields
+    if (!userData.username || !userData.email || !userData.password) {
+      throw new Error("Username, email, and password are required");
+    }
+
+    // Check for existing username or email
+    const existingUser = await this.findByUsernameOrEmail(userData.username);
+    if (existingUser) {
+      throw new Error("Username already exists");
+    }
+
+    const existingEmail = await this.findByUsernameOrEmail(userData.email);
+    if (existingEmail) {
+      throw new Error("Email already exists");
+    }
+
+    const hashedPassword = await common.hashPassword(userData.password ?? "");
+    const createdUser = await db
+      .insert(user)
+      .values({
+        id: createId(),
+        username: userData.username ?? "",
+        email: userData.email ?? "",
+        password: hashedPassword,
+        fullname: userData.fullname ?? "",
+      })
+      .returning();
+    return createdUser as unknown as User;
+  }
+
+  async updateUser(id: string, userData: Partial<User>) {
     try {
-      const updatedUser = await this.userRepo.update(id, userData);
+      // Check for duplicate username if username is being updated
+      if (userData.username) {
+        const existingUserWithUsername = await this.findByUsernameOrEmail(
+          userData.username
+        );
+        if (existingUserWithUsername && existingUserWithUsername.id !== id) {
+          throw new Error("Username already exists");
+        }
+      }
+
+      // Check for duplicate email if email is being updated
+      if (userData.email) {
+        const existingUserWithEmail = await this.findByUsernameOrEmail(
+          userData.email
+        );
+        if (existingUserWithEmail && existingUserWithEmail.id !== id) {
+          throw new Error("Email already exists");
+        }
+      }
+
+      const hashedPassword = await common.hashPassword(userData.password ?? "");
+      if (userData.password) {
+        userData.password = hashedPassword;
+      }
+
+      const updatedUser = await db
+        .update(user)
+        .set({
+          ...userData,
+          updatedAt: new Date(),
+        })
+        .where(sql`${user.id} = ${id}`)
+        .returning();
       return updatedUser as unknown as User | null;
     } catch (error) {
       console.error(`Error updating user with id ${id}:`, error);
@@ -83,10 +130,16 @@ export class UserService {
     }
   }
 
-  async deleteUser(id: string): Promise<boolean> {
+  async deleteUser(id: string) {
     try {
-      const result = await this.userRepo.delete(id);
-      return result.success;
+      await db
+        .update(user)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(sql`${user.id} = ${id}`);
+      return true;
     } catch (error) {
       console.error(`Error deleting user with id ${id}:`, error);
       throw new Error(`Failed to delete user with id ${id}`);

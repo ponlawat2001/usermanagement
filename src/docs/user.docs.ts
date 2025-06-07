@@ -157,6 +157,62 @@ export const getUserByIdDocs = {
   },
 } as SwaggerDetails | any;
 
+export const getMe = {
+  summary: "Get current user",
+  description: "Retrieve the currently authenticated user's information",
+  tags: ["Users"],
+  responses: {
+    "200": {
+      description: "Current user retrieved successfully",
+      content: {
+        "application/json": {
+          schema: t.Object({
+            status: t.Number(),
+            message: t.String(),
+            data: t.Object({
+              id: t.String(),
+              username: t.String(),
+              fullname: t.String(),
+              email: t.String(),
+              createdAt: t.String(),
+              updatedAt: t.String(),
+              isActive: t.Boolean(),
+              role: t.Optional(t.String()),
+            }),
+          }),
+          example: userSuccessExample,
+        },
+      },
+    },
+    "401": {
+      description: "Authentication required",
+      content: {
+        "application/json": {
+          schema: t.Object({
+            status: t.Number(),
+            message: t.String(),
+            data: t.Null(),
+          }),
+          example: unauthorizedExample,
+        },
+      },
+    },
+    "500": {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: t.Object({
+            status: t.Number(),
+            message: t.String(),
+            data: t.Null(),
+          }),
+          example: serverErrorExample,
+        },
+      },
+    },
+  },
+} as SwaggerDetails | any;
+
 // Documentation for parameters of GET /users/:id
 export const getUserByIdParams = t.Object({
   id: t.String({ description: "The unique identifier of the user" }),

@@ -1,7 +1,6 @@
 import Elysia, { t } from "elysia";
 import { ResponseHandler } from "../../utils/response.utils";
-import { UserRepo } from "../../repositories/user.repo";
-import { loginSchemaUser } from "../../spreads/user.spread";
+import { changePasswordSchemaUser, loginSchemaUser } from "../../validations/user.validation";
 import { JwtUtils } from "../../utils/jwt.utils";
 import {
   changePasswordSchemaDocs,
@@ -10,8 +9,8 @@ import {
   refreshTokenSchemaDocs,
 } from "../../docs/auth.docs";
 import { authProfile } from "../../interfaces/auth";
-
-const userRepo = new UserRepo();
+import { UserService } from "../../services/user/user.service";
+import { common } from "../../utils/common";
 
 // สร้าง schema สำหรับ refresh token
 const refreshTokenSchema = t.Object({
@@ -21,35 +20,15 @@ const refreshTokenSchema = t.Object({
   }),
 });
 
-// สร้าง schema สำหรับเปลี่ยนรหัสผ่าน
-const changePasswordSchema = t.Object({
-  currentPassword: t.String({
-    description: "Current password",
-    minLength: 6,
-  }),
-  newPassword: t.String({
-    description: "New password",
-    minLength: 8,
-    maxLength: 100,
-  }),
-  confirmNewPassword: t.String({
-    description: "Confirm new password",
-    minLength: 8,
-    maxLength: 100,
-  }),
-});
+const userService = new UserService();
 
 export const AuthController = new Elysia()
   .post(
     "/login",
     async ({ body, set }) => {
       const { usernameOrEmail, password } = body;
-
-      // ตรวจสอบการเข้าสู่ระบบ
       try {
-        // ค้นหา user จาก username หรือ email
-        const user = await userRepo.findByUsernameOrEmail(usernameOrEmail);
-
+        const user = await userService.findByUsernameOrEmail(usernameOrEmail);
         if (!user) {
           set.status = 401; // Unauthorized
           return ResponseHandler.unauthorized(
@@ -60,7 +39,7 @@ export const AuthController = new Elysia()
         // ตรวจสอบรหัสผ่านโดยใช้ Bun.password.verify เพื่อเปรียบเทียบรหัสผ่านที่เข้ารหัสแล้ว
         let isPasswordValid = false;
         try {
-          isPasswordValid = await Bun.password.verify(password, user.password);
+          isPasswordValid = await common.verifyPassword(password, user.password);
         } catch (err) {
           console.error("Password verification error:", err);
           isPasswordValid = false;
@@ -172,7 +151,7 @@ export const AuthController = new Elysia()
   // แอนด์พอยท์สำหรับเปลี่ยนรหัสผ่าน
   .post(
     "/change-password",
-    async ({ body, user, set }: { body: any ; user: authProfile; set: any }) => {
+    async ({ body, user, set }: { body: any; user: authProfile; set: any }) => {
       try {
         const { currentPassword, newPassword, confirmNewPassword } = body;
 
@@ -182,7 +161,7 @@ export const AuthController = new Elysia()
         }
 
         // ค้นหา user จากฐานข้อมูล
-        const userRecord = await userRepo.findById(user.id);
+        const userRecord = await userService.findById(user.id);
 
         if (!userRecord) {
           set.status = 404; // Not Found
@@ -192,7 +171,7 @@ export const AuthController = new Elysia()
         // ตรวจสอบรหัสผ่านปัจจุบัน
         let isValidPassword = false;
         try {
-          isValidPassword = await Bun.password.verify(
+          isValidPassword = await common.verifyPassword(
             currentPassword,
             userRecord.password
           );
@@ -208,11 +187,10 @@ export const AuthController = new Elysia()
           );
         }
 
-        // เข้ารหัสรหัสผ่านใหม่
-        const hashedPassword = await Bun.password.hash(newPassword);
-
         // อัพเดทรหัสผ่านในฐานข้อมูล
-        await userRepo.updatePassword(user.id, hashedPassword);
+        await userService.updateUser(user.id, {
+          password: newPassword,
+        } as any);
 
         set.status = 200; // OK
         return ResponseHandler.success(null, "Password changed successfully");
@@ -224,7 +202,7 @@ export const AuthController = new Elysia()
       }
     },
     {
-      body: changePasswordSchema,
+      body: changePasswordSchemaUser,
       detail: changePasswordSchemaDocs,
     }
   );

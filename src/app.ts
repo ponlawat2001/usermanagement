@@ -34,6 +34,10 @@ export const app = new Elysia()
     })
   )
   .derive(({ headers, jwt }) => extractUser({ headers, jwt }))
+
+   // === DOCUMENTATION ===
+  .use(swagger(swaggerConfig))
+  
   // === PUBLIC ENDPOINTS ===
   .group("", (app) =>
     app
@@ -66,14 +70,19 @@ export const app = new Elysia()
       .get(
         "/health",
         () => {
-          return ResponseHandler.success(
+            return ResponseHandler.success(
             {
               status: "healthy",
               timestamp: new Date().toISOString(),
               uptime: process.uptime(),
+              memoryUsage: process.memoryUsage(),
+              cpuUsage: process.cpuUsage(),
+              environment: process.env.NODE_ENV || "development",
+              version: process.env.npm_package_version || "unknown",
+              bun: process.versions.bun || "unknown",
             },
             "Service is healthy"
-          );
+            );
         },
         {
           detail: {
@@ -85,8 +94,7 @@ export const app = new Elysia()
       )
   )
 
-  // === DOCUMENTATION ===
-  .use(swagger(swaggerConfig))
+ 
 
   // === API VERSION 1 ===
   .group("/api/v1", (app) =>

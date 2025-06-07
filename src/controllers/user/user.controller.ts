@@ -10,9 +10,10 @@ import {
   updateUserParams,
   deleteUserDocs,
   deleteUserParams,
+  getMe,
 } from "../../docs/user.docs";
 
-import { createSchemaUser, updateSchemaUser } from "../../spreads/user.spread";
+import { createSchemaUser, updateSchemaUser } from "../../validations/user.validation";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserService } from "../../services/user/user.service";
 
@@ -31,7 +32,7 @@ export const UserController = new Elysia()
     },
     {
       detail: getAllUsersDocs,
-      beforeHandle: (context: any) => requireRole(context.user, "admin"),
+      // beforeHandle: (context: any) => requireRole(context.user, "admin"),
     }
   )
 
@@ -50,6 +51,27 @@ export const UserController = new Elysia()
     {
       detail: getUserByIdDocs,
       params: getUserByIdParams,
+    }
+  )
+
+  .get(
+    "/me",
+    async ({ user, set }) => {
+      if (!user) {
+        set.status = 401; // Unauthorized
+        return ResponseHandler.unauthorized("User not authenticated");
+      }
+      console.log("Fetching current user:", user);
+      const currentUser = await userService.findByUsernameOrEmail(user.name);
+      if (!currentUser) {
+        set.status = 404; // Not Found
+        return ResponseHandler.notFound("Current user not found");
+      }
+      set.status = 200; // OK
+      return ResponseHandler.success(currentUser, "Current user retrieved successfully");
+    },
+    {
+      detail: getMe,
     }
   )
 
@@ -90,7 +112,7 @@ export const UserController = new Elysia()
     "/:id",
     async ({ params, body, set }) => {
       try {
-        const updatedUser = await userService.updateUser(params.id, body);
+        const updatedUser = await userService.updateUser(params.id, body as any);
         if (!updatedUser) {
           set.status = 400;
           return ResponseHandler.notFound(

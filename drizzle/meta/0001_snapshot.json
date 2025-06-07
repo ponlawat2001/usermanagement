@@ -1,6 +1,6 @@
 {
-  "id": "8d853912-fb22-45a0-a3f9-b91f8f4e1d3d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "76256746-d54a-4330-91dd-6979ffe1e95c",
+  "prevId": "8d853912-fb22-45a0-a3f9-b91f8f4e1d3d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -10,9 +10,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "'fzmnhrnhu6wnzx7z4zpt50z4'"
         },
         "username": {
           "name": "username",

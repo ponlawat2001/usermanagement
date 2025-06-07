@@ -1,11 +1,6 @@
 import { t } from "elysia";
-import { spread } from "../database/utils";
-import { user } from "../schemas/user";
 import { ResponseHandler } from "../utils/response.utils";
 
-// ใช้ spread เพื่อแปลง Drizzle schema ให้เข้ากับ Elysia t.Object
-export const userInsertSchema = spread(user, "insert");
-export const userSelectSchema = spread(user, "select");
 
 // สร้าง schema สำหรับ create operation
 export const createSchemaUser = t.Object({
@@ -57,11 +52,11 @@ export const userResponseSchemaUser = t.Object({
     description: 'Email address of the user',
     format: 'email'
   }),
-  createdAt: t.Date({
-    description: 'Date and time when the user was created'
+  createdAt: t.Number({
+    description: 'Timestamp when the user was created'
   }),
-  updatedAt: t.Date({
-    description: 'Date and time of the last update to the user record'
+  updatedAt: t.Number({
+    description: 'Timestamp of the last update to the user record'
   }),
   isActive: t.Boolean({
     description: 'Indicates whether the user account is active'
@@ -132,3 +127,30 @@ export const updateSchemaUser = t.Object({
 }, {
   description: 'Fields that can be updated for a user'
 });
+
+
+// Schema แก้ไขรหัสผ่าน
+export const changePasswordSchemaUser = t.Object({
+  currentPassword: t.String({
+    description: 'Current password of the user',
+    examples: ['OldSecureP@ss123'],
+    minLength: 8,
+    error: ResponseHandler.error('Current password must be at least 8 characters long', 422)
+  }),
+  newPassword: t.String({
+    description: 'New password for the user',
+    examples: ['NewSecureP@ss456'],
+    minLength: 8,
+    pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$',
+    error: ResponseHandler.error('New password must be 8-100 characters and include at least one uppercase letter, one lowercase letter, and one number', 422)
+  }),
+  confirmNewPassword: t.String({
+    description: 'Confirmation of the new password',
+    examples: ['NewSecureP@ss456'],
+    minLength: 8,
+    error: ResponseHandler.error('Please confirm your new password', 422)
+  }),
+}, {
+  description: 'Fields required to change the user password'
+});
+
