@@ -35,6 +35,26 @@ export class UserService {
     }
   }
 
+  async findByDiscordId (discordId: string) {
+    try {
+      const userInfo = await db
+        .select()
+        .from(user) 
+        .where(
+          sql`${user.discordId} = ${discordId} AND ${user.deletedAt} IS NULL`
+        );
+      if (!userInfo || userInfo.length === 0) {
+        console.warn(`User with Discord ID ${discordId} not found`);
+        return null;
+      } else {
+        return userInfo[0] as unknown as User;
+      }
+    } catch (error) {
+      console.error(`Error fetching user with Discord ID ${discordId}:`, error);
+      throw new Error(`Failed to fetch user with Discord ID ${discordId}`);
+    }
+  };
+
   async findByUsernameOrEmail(usernameOrEmail: string) {
     try {
       const userInfo = await db
@@ -83,7 +103,6 @@ export class UserService {
 
   async updateUser(id: string, userData: Partial<User>) {
     try {
-
       const hashedPassword = await common.hashPassword(userData.password ?? "");
       if (userData.password) {
         userData.password = hashedPassword;
@@ -117,6 +136,41 @@ export class UserService {
     } catch (error) {
       console.error(`Error deleting user with id ${id}:`, error);
       throw new Error(`Failed to delete user with id ${id}`);
+    }
+  }
+
+  async createUserByDiscordId(userData: Partial<User>) {
+    try {
+      const createdUser = await db
+        .insert(user)
+        .values({
+          id: createId(),
+          fullname: userData.fullname ?? "",
+          discordId: userData.discordId ?? "",
+          lastLogin: new Date(),
+        })
+        .returning();
+      return createdUser as unknown as User;
+    } catch (error) {
+      console.error("Error creating user by Discord ID:", error);
+      throw new Error("Failed to create user by Discord ID");
+    }
+  }
+
+  async updateLastLogin(id: string) {
+    try {
+      const updatedUser = await db
+        .update(user)
+        .set({
+          lastLogin: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(sql`${user.id} = ${id}`)
+        .returning();
+      return updatedUser as unknown as User | null;
+    } catch (error) {
+      console.error(`Error updating last login for user with id ${id}:`, error);
+      throw new Error(`Failed to update last login for user with id ${id}`);
     }
   }
 }

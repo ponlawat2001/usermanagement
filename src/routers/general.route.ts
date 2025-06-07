@@ -1,5 +1,7 @@
 import { Elysia } from "elysia";
 import { ResponseHandler } from "../utils/response.utils";
+import { serverHealthCheckExample } from "../configs/swagger-examples";
+import { apiInformationDocs, healthCheckDocs } from "../docs/general.docs";
 
 export const generalRoutes = new Elysia()
   .get(
@@ -21,11 +23,7 @@ export const generalRoutes = new Elysia()
       );
     },
     {
-      detail: {
-        summary: "API Information",
-        description: "Get general information about the API",
-        tags: ["General"],
-      },
+      detail: apiInformationDocs
     }
   )
   .get(
@@ -46,10 +44,6 @@ export const generalRoutes = new Elysia()
       );
     },
     {
-      detail: {
-        summary: "Health Check",
-        description: "Check service health status",
-        tags: ["General"],
-      },
+      detail: healthCheckDocs
     }
   );

@@ -1,5 +1,6 @@
 import { t } from "elysia";
 import {
+  discordURl,
   loginSuccessExample,
   notFoundExample,
   refreshTokenExample,
@@ -237,6 +238,53 @@ export const changePasswordSchemaDocs = {
             data: t.Null(),
           }),
           example: notFoundExample,
+        },
+      },
+    },
+    "500": {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: t.Object({
+            status: t.Number(),
+            message: t.String(),
+            data: t.Null(),
+          }),
+          example: serverErrorExample,
+        },
+      },
+    },
+  },
+} as SwaggerDetails | any;
+
+export const discordOAuthSchemaDocs = {
+  summary: "Discord OAuth login",
+  description: "Authenticate user via Discord OAuth and return session token",
+  tags: ["Authentication"],
+  responses: {
+    "200": {
+      description: "Discord OAuth login successful",
+      content: {
+        "application/json": {
+          schema: t.Object({
+            status: t.Number(),
+            message: t.String(),
+            data: t.String()
+          }),
+          example: discordURl,
+        },
+      },
+    },
+    "401": {
+      description: "Invalid Discord OAuth token",
+      content: {
+        "application/json": {
+          schema: t.Object({
+            status: t.Number(),
+            message: t.String(),
+            data: t.Null(),
+          }),
+          example: unauthorizedExample,
         },
       },
     },

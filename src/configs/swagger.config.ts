@@ -1,4 +1,6 @@
-{
+import swagger from "@elysiajs/swagger"
+
+export const swaggerConfig = {
   "documentation": {
     "info": {
       "title": "User Management API",
@@ -25,12 +27,12 @@
     },
     "tags": [
       {
-        "name": "Users",
-        "description": "User management endpoints"
-      },
-      {
         "name": "Authentication",
         "description": "Authentication related endpoints"
+      },
+      {
+        "name": "Users",
+        "description": "User management endpoints"
       }
     ],
     "servers": [
@@ -42,6 +44,7 @@
   },
   "path": "/docs",
   "swaggerOptions": {
-    "persistAuthorization": true
+    "persistAuthorization": true,
+    "tagsSorter": "alpha",
   }
 }

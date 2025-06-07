@@ -65,23 +65,6 @@ export const userResponseSchemaUser = t.Object({
   description: 'User information returned by the API'
 });
 
-// Schema สำหรับ login
-export const loginSchemaUser = t.Object({
-  usernameOrEmail: t.String({
-    description: 'Username or email address for login',
-    examples: ['johndoe', 'john@example.com'],
-    minLength: 3,
-    error: ResponseHandler.error('Please enter a valid username or email', 422)
-  }),
-  password: t.String({
-    description: 'User password',
-    examples: ['********'],
-    minLength: 8,
-    error: ResponseHandler.error('Password must be at least 8 characters long', 422)
-  })
-}, {
-  description: 'Credentials required for user login'
-});
 
 // Schema สำหรับอัพเดทผู้ใช้
 export const updateSchemaUser = t.Object({

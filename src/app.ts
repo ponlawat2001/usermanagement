@@ -2,12 +2,11 @@ import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import { jwt } from "@elysiajs/jwt";
-import { ResponseHandler } from "./utils/response.utils";
 import { rateLimit } from "./middlewares/rate-limit.middleware";
-import swaggerConfig from "./configs/swagger.config.json";
 import { extractUser } from "./middlewares/auth.middleware";
 import { routes } from "./routers/index.route";
 import { errorHandler } from "./utils/errorResponse.utils";
+import { swaggerConfig } from "./configs/swagger.config";
 
 export const app = new Elysia()
   // === GLOBAL MIDDLEWARE SETUP ===

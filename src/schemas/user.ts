@@ -2,11 +2,11 @@ import { boolean, pgTable, text ,serial, uniqueIndex, date, timestamp } from "dr
 import { createId } from "@paralleldrive/cuid2";
 
 export const user = pgTable("user", {
-  id: text('id').primaryKey().default(createId()),
-  username: text("username").notNull(),
-  fullname: text("fullname").notNull(),
-  password: text("password").notNull(),
-  email: text("email").notNull(),
+  id: text('id').primaryKey(),
+  username: text("username"),
+  fullname: text("fullname"),
+  password: text("password"),
+  email: text("email"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),

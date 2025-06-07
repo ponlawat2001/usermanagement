@@ -15,6 +15,20 @@
       "when": 1749281016376,
       "tag": "0001_sweet_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749301066294,
+      "tag": "0002_romantic_hannibal_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1749301119962,
+      "tag": "0003_brainy_stardust",
+      "breakpoints": true
     }
   ]
 }
