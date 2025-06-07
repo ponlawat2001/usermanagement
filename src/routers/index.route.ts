@@ -1,6 +1,8 @@
-import { generalRoutes } from "./general.route";
-import { apiRoutes } from "./api.route";
+/** @format */
 
-export const routes = [generalRoutes, apiRoutes];
+import { generalRoutes } from './general.route'
+import { apiRoutes } from './api.route'
 
-export { generalRoutes, apiRoutes };
+export const routes = [generalRoutes, apiRoutes]
+
+export { generalRoutes, apiRoutes }

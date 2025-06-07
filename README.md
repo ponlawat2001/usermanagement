@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # User Management API
 
 A modern TypeScript backend API for user management built with Elysia.js and Drizzle ORM.

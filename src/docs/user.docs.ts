@@ -1,4 +1,6 @@
-import { t } from "elysia";
+/** @format */
+
+import { t } from 'elysia'
 import {
   userSuccessExample,
   usersListExample,
@@ -8,8 +10,8 @@ import {
   forbiddenExample,
   validationErrorExample,
   serverErrorExample,
-} from "../configs/swagger-examples";
-import { SwaggerDetails } from "../interfaces/swagger";
+} from '../configs/swagger-examples'
+import { SwaggerDetails } from '../interfaces/swagger'
 
 /**
  * Swagger documentation for User endpoints
@@ -17,14 +19,14 @@ import { SwaggerDetails } from "../interfaces/swagger";
 
 // Documentation for GET /users/findAll
 export const getAllUsersDocs = {
-  summary: "Get all users",
-  description: "Retrieve a list of all active users in the system",
-  tags: ["Users"],
+  summary: 'Get all users',
+  description: 'Retrieve a list of all active users in the system',
+  tags: ['Users'],
   responses: {
-    "200": {
-      description: "List of users retrieved successfully",
+    '200': {
+      description: 'List of users retrieved successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -38,17 +40,17 @@ export const getAllUsersDocs = {
                 updatedAt: t.String(),
                 isActive: t.Boolean(),
                 role: t.Optional(t.String()),
-              }),
+              })
             ),
           }),
           example: usersListExample,
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -58,10 +60,10 @@ export const getAllUsersDocs = {
         },
       },
     },
-    "403": {
-      description: "User does not have admin privileges",
+    '403': {
+      description: 'User does not have admin privileges',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -71,10 +73,10 @@ export const getAllUsersDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -85,18 +87,18 @@ export const getAllUsersDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 // Documentation for GET /users/:id
 export const getUserByIdDocs = {
-  summary: "Get user by ID",
-  description: "Retrieve a specific user by their unique identifier",
-  tags: ["Users"],
+  summary: 'Get user by ID',
+  description: 'Retrieve a specific user by their unique identifier',
+  tags: ['Users'],
   responses: {
-    "200": {
-      description: "User retrieved successfully",
+    '200': {
+      description: 'User retrieved successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -115,10 +117,10 @@ export const getUserByIdDocs = {
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -128,10 +130,10 @@ export const getUserByIdDocs = {
         },
       },
     },
-    "404": {
-      description: "User not found",
+    '404': {
+      description: 'User not found',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -141,10 +143,10 @@ export const getUserByIdDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -155,17 +157,17 @@ export const getUserByIdDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 export const getMe = {
-  summary: "Get current user",
+  summary: 'Get current user',
   description: "Retrieve the currently authenticated user's information",
-  tags: ["Users"],
+  tags: ['Users'],
   responses: {
-    "200": {
-      description: "Current user retrieved successfully",
+    '200': {
+      description: 'Current user retrieved successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -184,10 +186,10 @@ export const getMe = {
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -197,10 +199,10 @@ export const getMe = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -211,23 +213,25 @@ export const getMe = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 // Documentation for parameters of GET /users/:id
 export const getUserByIdParams = t.Object({
-  id: t.String({ description: "The unique identifier of the user" }),
-}) as SwaggerDetails | any;
+  id: t.String({
+    description: 'The unique identifier of the user',
+  }),
+}) as SwaggerDetails | any
 
 // Documentation for POST /users/register
 export const createUserDocs = {
-  summary: "Create new user",
-  description: "Register a new user in the system",
-  tags: ["Users"],
+  summary: 'Create new user',
+  description: 'Register a new user in the system',
+  tags: ['Users'],
   responses: {
-    "201": {
-      description: "User created successfully",
+    '201': {
+      description: 'User created successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -246,10 +250,10 @@ export const createUserDocs = {
         },
       },
     },
-    "400": {
-      description: "Validation failed or username/email already exists",
+    '400': {
+      description: 'Validation failed or username/email already exists',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -259,10 +263,10 @@ export const createUserDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -273,18 +277,18 @@ export const createUserDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 // Documentation for PATCH /users/:id
 export const updateUserDocs = {
-  summary: "Update user",
+  summary: 'Update user',
   description: "Update an existing user's information",
-  tags: ["Users"],
+  tags: ['Users'],
   responses: {
-    "200": {
-      description: "User updated successfully",
+    '200': {
+      description: 'User updated successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -303,10 +307,10 @@ export const updateUserDocs = {
         },
       },
     },
-    "400": {
-      description: "Validation failed or username/email already exists",
+    '400': {
+      description: 'Validation failed or username/email already exists',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -316,10 +320,10 @@ export const updateUserDocs = {
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -329,10 +333,10 @@ export const updateUserDocs = {
         },
       },
     },
-    "404": {
-      description: "User not found",
+    '404': {
+      description: 'User not found',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -342,10 +346,10 @@ export const updateUserDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -356,23 +360,25 @@ export const updateUserDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 // Documentation for parameters of PATCH /users/:id
 export const updateUserParams = t.Object({
-  id: t.String({ description: "The unique identifier of the user to update" }),
-});
+  id: t.String({
+    description: 'The unique identifier of the user to update',
+  }),
+})
 
 // Documentation for DELETE /users/:id
 export const deleteUserDocs = {
-  summary: "Delete user",
-  description: "Delete an existing user from the system",
-  tags: ["Users"],
+  summary: 'Delete user',
+  description: 'Delete an existing user from the system',
+  tags: ['Users'],
   responses: {
-    "200": {
-      description: "User deleted successfully",
+    '200': {
+      description: 'User deleted successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -380,16 +386,16 @@ export const deleteUserDocs = {
           }),
           example: {
             status: 200,
-            message: "User deleted successfully",
+            message: 'User deleted successfully',
             data: null,
           },
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -399,10 +405,10 @@ export const deleteUserDocs = {
         },
       },
     },
-    "403": {
-      description: "User does not have admin privileges",
+    '403': {
+      description: 'User does not have admin privileges',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -412,10 +418,10 @@ export const deleteUserDocs = {
         },
       },
     },
-    "404": {
-      description: "User not found",
+    '404': {
+      description: 'User not found',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -425,10 +431,10 @@ export const deleteUserDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -439,9 +445,11 @@ export const deleteUserDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 // Documentation for parameters of DELETE /users/:id
 export const deleteUserParams = t.Object({
-  id: t.String({ description: "The unique identifier of the user to delete" }),
-});
+  id: t.String({
+    description: 'The unique identifier of the user to delete',
+  }),
+})

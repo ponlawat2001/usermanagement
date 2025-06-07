@@ -1,19 +1,18 @@
-import { t } from "elysia";
-import {
-  apiInformationExample,
-  serverHealthCheckExample,
-} from "../configs/swagger-examples";
-import { SwaggerDetails } from "../interfaces/swagger";
+/** @format */
+
+import { t } from 'elysia'
+import { apiInformationExample, serverHealthCheckExample } from '../configs/swagger-examples'
+import { SwaggerDetails } from '../interfaces/swagger'
 
 export const apiInformationDocs = {
-  summary: "API Information",
-  description: "Get general information about the API",
-  tags: ["General"],
+  summary: 'API Information',
+  description: 'Get general information about the API',
+  tags: ['General'],
   responses: {
-    "200": {
-      description: "API information retrieved successfully",
+    '200': {
+      description: 'API information retrieved successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             success: t.Boolean(),
             message: t.String(),
@@ -32,17 +31,17 @@ export const apiInformationDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 export const healthCheckDocs = {
-  summary: "Health Check",
-  description: "Check service health status",
-  tags: ["General"],
+  summary: 'Health Check',
+  description: 'Check service health status',
+  tags: ['General'],
   responses: {
-    "200": {
-      description: "Service is healthy",
+    '200': {
+      description: 'Service is healthy',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             success: t.Boolean(),
             message: t.String(),
@@ -71,4 +70,4 @@ export const healthCheckDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any

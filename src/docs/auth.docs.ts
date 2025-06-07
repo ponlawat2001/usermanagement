@@ -1,4 +1,6 @@
-import { t } from "elysia";
+/** @format */
+
+import { t } from 'elysia'
 import {
   discordURl,
   loginSuccessExample,
@@ -8,18 +10,18 @@ import {
   successNoDataExample,
   unauthorizedExample,
   validationErrorExample,
-} from "../configs/swagger-examples";
-import { SwaggerDetails } from "../interfaces/swagger";
+} from '../configs/swagger-examples'
+import { SwaggerDetails } from '../interfaces/swagger'
 
 export const loginSchemaUserDocs = {
-  summary: "User login",
-  description: "Authenticate a user and return a session token",
-  tags: ["Authentication"],
+  summary: 'User login',
+  description: 'Authenticate a user and return a session token',
+  tags: ['Authentication'],
   responses: {
-    "200": {
-      description: "Login successful",
+    '200': {
+      description: 'Login successful',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -38,10 +40,10 @@ export const loginSchemaUserDocs = {
         },
       },
     },
-    "401": {
-      description: "Invalid credentials",
+    '401': {
+      description: 'Invalid credentials',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -51,10 +53,10 @@ export const loginSchemaUserDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -65,17 +67,17 @@ export const loginSchemaUserDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 export const refreshTokenSchemaDocs = {
-  summary: "Refresh access token",
-  description: "Generate a new access token using a valid refresh token",
-  tags: ["Authentication"],
+  summary: 'Refresh access token',
+  description: 'Generate a new access token using a valid refresh token',
+  tags: ['Authentication'],
   responses: {
-    "200": {
-      description: "Token refreshed successfully",
+    '200': {
+      description: 'Token refreshed successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -87,10 +89,10 @@ export const refreshTokenSchemaDocs = {
         },
       },
     },
-    "401": {
-      description: "Invalid or expired refresh token",
+    '401': {
+      description: 'Invalid or expired refresh token',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -100,10 +102,10 @@ export const refreshTokenSchemaDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -114,17 +116,17 @@ export const refreshTokenSchemaDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 export const logoutSchemaDocs = {
-  summary: "User logout",
+  summary: 'User logout',
   description: "Invalidate the user's session and refresh token",
-  tags: ["Authentication"],
+  tags: ['Authentication'],
   responses: {
-    "200": {
-      description: "Logout successful",
+    '200': {
+      description: 'Logout successful',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -134,10 +136,10 @@ export const logoutSchemaDocs = {
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -147,10 +149,10 @@ export const logoutSchemaDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -161,40 +163,40 @@ export const logoutSchemaDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 export const changePasswordSchemaDocs = {
-  summary: "Change password",
-  description: "Change user password with validation",
-  tags: ["Authentication"],
+  summary: 'Change password',
+  description: 'Change user password with validation',
+  tags: ['Authentication'],
   body: t.Object(
     {
       currentPassword: t.String({
-        description: "Current password of the user",
-        examples: ["OldSecureP@ss123"],
+        description: 'Current password of the user',
+        examples: ['OldSecureP@ss123'],
         minLength: 8,
       }),
       newPassword: t.String({
-        description: "New password for the user",
-        examples: ["NewSecureP@ss456"],
+        description: 'New password for the user',
+        examples: ['NewSecureP@ss456'],
         minLength: 8,
-        pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$",
+        pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$',
       }),
       confirmNewPassword: t.String({
-        description: "Confirmation of the new password",
-        examples: ["NewSecureP@ss456"],
+        description: 'Confirmation of the new password',
+        examples: ['NewSecureP@ss456'],
         minLength: 8,
       }),
     },
     {
-      description: "Fields required to change the user password",
-    },
+      description: 'Fields required to change the user password',
+    }
   ),
   responses: {
-    "200": {
-      description: "Password changed successfully",
+    '200': {
+      description: 'Password changed successfully',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -204,10 +206,10 @@ export const changePasswordSchemaDocs = {
         },
       },
     },
-    "401": {
-      description: "Authentication required",
+    '401': {
+      description: 'Authentication required',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -217,11 +219,10 @@ export const changePasswordSchemaDocs = {
         },
       },
     },
-    "422": {
-      description:
-        "Validation error (passwords do not match or incorrect current password)",
+    '422': {
+      description: 'Validation error (passwords do not match or incorrect current password)',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -231,10 +232,10 @@ export const changePasswordSchemaDocs = {
         },
       },
     },
-    "404": {
-      description: "User not found",
+    '404': {
+      description: 'User not found',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -244,10 +245,10 @@ export const changePasswordSchemaDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -258,17 +259,17 @@ export const changePasswordSchemaDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any
 
 export const discordOAuthSchemaDocs = {
-  summary: "Discord OAuth login",
-  description: "Authenticate user via Discord OAuth and return session token",
-  tags: ["Authentication"],
+  summary: 'Discord OAuth login',
+  description: 'Authenticate user via Discord OAuth and return session token',
+  tags: ['Authentication'],
   responses: {
-    "200": {
-      description: "Discord OAuth login successful",
+    '200': {
+      description: 'Discord OAuth login successful',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -278,10 +279,10 @@ export const discordOAuthSchemaDocs = {
         },
       },
     },
-    "401": {
-      description: "Invalid Discord OAuth token",
+    '401': {
+      description: 'Invalid Discord OAuth token',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -291,10 +292,10 @@ export const discordOAuthSchemaDocs = {
         },
       },
     },
-    "500": {
-      description: "Internal server error",
+    '500': {
+      description: 'Internal server error',
       content: {
-        "application/json": {
+        'application/json': {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
@@ -305,4 +306,4 @@ export const discordOAuthSchemaDocs = {
       },
     },
   },
-} as SwaggerDetails | any;
+} as SwaggerDetails | any

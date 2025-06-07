@@ -1,123 +1,105 @@
-import Elysia, { t } from "elysia";
-import { ResponseHandler } from "../../utils/response.utils";
-import { changePasswordSchemaUser } from "../../validations/user.validation";
-import { JwtUtils } from "../../utils/jwt.utils";
+/** @format */
+
+import Elysia, { t } from 'elysia'
+import { ResponseHandler } from '../../utils/response.utils'
+import { changePasswordSchemaUser } from '../../validations/user.validation'
+import { JwtUtils } from '../../utils/jwt.utils'
 import {
   changePasswordSchemaDocs,
   discordOAuthSchemaDocs,
   loginSchemaUserDocs,
   logoutSchemaDocs,
   refreshTokenSchemaDocs,
-} from "../../docs/auth.docs";
-import { authProfile } from "../../interfaces/auth";
-import { UserService } from "../../services/user/user.service";
-import { common } from "../../utils/common.utils";
-import {
-  refreshTokenSchema,
-  loginSchemaUser,
-} from "../../validations/auth.validation";
-import { DiscordOAuthService } from "../../api/discord";
-import { User } from "@/interfaces/user";
+} from '../../docs/auth.docs'
+import { authProfile } from '../../interfaces/auth'
+import { UserService } from '../../services/user/user.service'
+import { common } from '../../utils/common.utils'
+import { refreshTokenSchema, loginSchemaUser } from '../../validations/auth.validation'
+import { DiscordOAuthService } from '../../api/discord'
+import { User } from '@/interfaces/user'
 
-const userService = new UserService();
+const userService = new UserService()
 
 export const AuthController = new Elysia()
 
   // discord Sign in
   .post(
-    "/discord-sign-in",
+    '/discord-sign-in',
     async ({ set }) => {
       try {
         // Exchange authorization code for access token
-        const tokenResponse = await DiscordOAuthService.generateAuthUrl();
+        const tokenResponse = await DiscordOAuthService.generateAuthUrl()
         if (!tokenResponse) {
-          set.status = 400;
-          return ResponseHandler.validationError(
-            "Invalid Discord authorization code",
-          );
+          set.status = 400
+          return ResponseHandler.validationError('Invalid Discord authorization code')
         }
-        console.log("Discord Token Response:", tokenResponse);
-        return ResponseHandler.success(
-          tokenResponse,
-          "Discord sign-in URL generated successfully",
-        );
+        console.log('Discord Token Response:', tokenResponse)
+        return ResponseHandler.success(tokenResponse, 'Discord sign-in URL generated successfully')
       } catch (error: any) {
-        set.status = 500;
-        return ResponseHandler.serverError(
-          error.message || "Discord sign-in failed",
-        );
+        set.status = 500
+        return ResponseHandler.serverError(error.message || 'Discord sign-in failed')
       }
     },
     {
       detail: discordOAuthSchemaDocs,
-    },
+    }
   )
 
   // discord callback
   .get(
-    "/discord-callback",
+    '/discord-callback',
     async ({ query, set }) => {
       try {
-        const { code } = query;
+        const { code } = query
         if (!code) {
-          set.status = 400; // Bad Request
-          return ResponseHandler.validationError(
-            "Authorization code is required",
-          );
+          set.status = 400 // Bad Request
+          return ResponseHandler.validationError('Authorization code is required')
         }
         // Exchange authorization code for access token and user info
-        const discordToken = await DiscordOAuthService.getAccessToken(code);
+        const discordToken = await DiscordOAuthService.getAccessToken(code)
         if (!discordToken) {
-          set.status = 400; // Bad Request
-          return ResponseHandler.validationError(
-            "Invalid Discord authorization code",
-          );
+          set.status = 400 // Bad Request
+          return ResponseHandler.validationError('Invalid Discord authorization code')
         }
 
-        const discordUser = await DiscordOAuthService.getUserInfo(
-          discordToken.access_token,
-        );
+        const discordUser = await DiscordOAuthService.getUserInfo(discordToken.access_token)
         if (!discordUser) {
-          set.status = 400; // Bad Request
-          return ResponseHandler.validationError(
-            "Failed to fetch Discord user info",
-          );
+          set.status = 400 // Bad Request
+          return ResponseHandler.validationError('Failed to fetch Discord user info')
         }
 
         let payload = {
-          id: "",
-          username: "",
-          email: "", // Discord may not provide email
-        };
+          id: '',
+          username: '',
+          email: '', // Discord may not provide email
+        }
         // Check if user already exists in the database
-        const user = await userService.findByDiscordId(discordUser.id);
+        const user = await userService.findByDiscordId(discordUser.id)
         if (!user) {
           const formattedUser = {
             discordId: discordUser.id,
             fullname: discordUser.username, // Assuming fullname is same as username
-          };
-          const newUser =
-            await userService.createUserByDiscordId(formattedUser);
-          await userService.updateLastLogin(newUser.id);
+          }
+          const newUser = await userService.createUserByDiscordId(formattedUser)
+          await userService.updateLastLogin(newUser.id)
 
           payload = {
             id: newUser.id,
             username: newUser.username,
-            email: newUser.email || "", // Discord may not provide email
-          };
+            email: newUser.email || '', // Discord may not provide email
+          }
         } else {
           // If user exists, update their last login time
-          await userService.updateLastLogin(user.id);
+          await userService.updateLastLogin(user.id)
 
           // Generate JWT token and refresh token for the user
           payload = {
             id: user.id,
             username: user.username,
             email: user.email,
-          };
+          }
 
-          const { accessToken, refreshToken } =
-            await JwtUtils.generateTokens(payload);
+          const { accessToken, refreshToken } = await JwtUtils.generateTokens(payload)
           return ResponseHandler.success(
             {
               accessToken,
@@ -126,74 +108,66 @@ export const AuthController = new Elysia()
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role || "user",
+                role: user.role || 'user',
               },
             },
-            "Login successful",
-          );
+            'Login successful'
+          )
         }
       } catch (error: any) {
-        set.status = 500; // Internal Server Error
-        return ResponseHandler.serverError(
-          error.message || "Discord callback failed",
-        );
+        set.status = 500 // Internal Server Error
+        return ResponseHandler.serverError(error.message || 'Discord callback failed')
       }
     },
     {
       query: t.Object({
-        code: t.String({ description: "Discord authorization code" }),
+        code: t.String({
+          description: 'Discord authorization code',
+        }),
       }),
       detail: {
         hide: true,
       },
-    },
+    }
   )
 
   // login
   .post(
-    "/login",
+    '/login',
     async ({ body, set }) => {
-      const { usernameOrEmail, password } = body;
+      const { usernameOrEmail, password } = body
       try {
-        const user = await userService.findByUsernameOrEmail(usernameOrEmail);
+        const user = await userService.findByUsernameOrEmail(usernameOrEmail)
         if (!user) {
-          set.status = 401; // Unauthorized
-          return ResponseHandler.unauthorized(
-            "Invalid username/email or password",
-          );
+          set.status = 401 // Unauthorized
+          return ResponseHandler.unauthorized('Invalid username/email or password')
         }
 
         // ตรวจสอบรหัสผ่านโดยใช้ Bun.password.verify เพื่อเปรียบเทียบรหัสผ่านที่เข้ารหัสแล้ว
-        let isPasswordValid = false;
+        let isPasswordValid = false
         try {
-          isPasswordValid = await common.verifyPassword(
-            password,
-            user.password,
-          );
+          isPasswordValid = await common.verifyPassword(password, user.password)
         } catch (err) {
-          console.error("Password verification error:", err);
-          isPasswordValid = false;
+          console.error('Password verification error:', err)
+          isPasswordValid = false
         }
 
         if (!isPasswordValid) {
-          set.status = 401;
-          return ResponseHandler.unauthorized(
-            "Invalid username/email or password",
-          );
+          set.status = 401
+          return ResponseHandler.unauthorized('Invalid username/email or password')
         }
         const payload = {
           id: user.id,
           username: user.username,
           email: user.email,
-        };
+        }
         // สร้าง JWT token และ refresh token สำหรับ user
-        const { accessToken, refreshToken } =
-          await JwtUtils.generateTokens(payload);
+        const { accessToken, refreshToken } = await JwtUtils.generateTokens(payload)
 
-        await userService.updateLastLogin(user.id);
+        await userService.updateLastLogin(user.id)
 
         // สร้าง response สำหรับการเข้าสู่ระบบสำเร็จ พร้อมกับ token
-        set.status = 200; // OK
+        set.status = 200 // OK
         return ResponseHandler.success(
           {
             accessToken,
@@ -202,147 +176,126 @@ export const AuthController = new Elysia()
               id: user.id,
               username: user.username,
               email: user.email,
-              role: user.role || "user",
+              role: user.role || 'user',
             },
           },
-          "Login successful",
-        );
+          'Login successful'
+        )
       } catch (error: any) {
-        set.status = 500; // Internal Server Error
-        return ResponseHandler.serverError(error.message || "Login failed");
+        set.status = 500 // Internal Server Error
+        return ResponseHandler.serverError(error.message || 'Login failed')
       }
     },
     {
       body: loginSchemaUser,
       detail: loginSchemaUserDocs,
-    },
+    }
   )
 
   // แอนด์พอยท์สำหรับ refresh token
   .post(
-    "/refresh-token",
+    '/refresh-token',
     async ({ body, set }) => {
       try {
-        const { refreshToken } = body;
+        const { refreshToken } = body
 
         // สร้าง access token ใหม่จาก refresh token
-        const result = await JwtUtils.refreshAccessToken(refreshToken);
+        const result = await JwtUtils.refreshAccessToken(refreshToken)
 
         if (!result) {
-          set.status = 401; // Unauthorized
-          return ResponseHandler.unauthorized(
-            "Invalid or expired refresh token",
-          );
+          set.status = 401 // Unauthorized
+          return ResponseHandler.unauthorized('Invalid or expired refresh token')
         }
 
         // ส่ง access token ใหม่กลับไป
-        set.status = 200; // OK
+        set.status = 200 // OK
         return ResponseHandler.success(
           {
             accessToken: result.accessToken,
           },
-          "Token refreshed successfully",
-        );
+          'Token refreshed successfully'
+        )
       } catch (error: any) {
-        set.status = 500; // Internal Server Error
-        return ResponseHandler.serverError(
-          error.message || "Failed to refresh token",
-        );
+        set.status = 500 // Internal Server Error
+        return ResponseHandler.serverError(error.message || 'Failed to refresh token')
       }
     },
     {
       body: refreshTokenSchema,
       detail: refreshTokenSchemaDocs,
-    },
+    }
   )
 
   // แอนด์พอยท์สำหรับออกจากระบบ
   .post(
-    "/logout",
+    '/logout',
     async ({ body, set }) => {
       try {
-        const { refreshToken } = body;
+        const { refreshToken } = body
         // ยกเลิก refresh token
-        JwtUtils.revokeRefreshToken(refreshToken);
+        JwtUtils.revokeRefreshToken(refreshToken)
 
-        set.status = 200; // OK
-        return ResponseHandler.success(null, "Logged out successfully");
+        set.status = 200 // OK
+        return ResponseHandler.success(null, 'Logged out successfully')
       } catch (error: any) {
-        set.status = 500; // Internal Server Error
-        return ResponseHandler.serverError(
-          error.message || "Failed to log out",
-        );
+        set.status = 500 // Internal Server Error
+        return ResponseHandler.serverError(error.message || 'Failed to log out')
       }
     },
     {
       body: refreshTokenSchema,
       detail: logoutSchemaDocs,
-    },
+    }
   )
 
   // แอนด์พอยท์สำหรับเปลี่ยนรหัสผ่าน
   .post(
-    "/change-password",
-    async ({
-      body,
-      user,
-      set,
-    }: {
-      body: typeof changePasswordSchemaUser;
-      user: authProfile;
-      set: any;
-    }) => {
+    '/change-password',
+    async ({ body, user, set }: { body: typeof changePasswordSchemaUser; user: authProfile; set: any }) => {
       try {
-        const { currentPassword, newPassword, confirmNewPassword } = body;
+        const { currentPassword, newPassword, confirmNewPassword } = body
 
         // ตรวจสอบว่า newPassword และ confirmNewPassword ตรงกัน
         if (newPassword !== confirmNewPassword) {
-          return ResponseHandler.validationError("New passwords do not match");
+          return ResponseHandler.validationError('New passwords do not match')
         }
 
         // ค้นหา user จากฐานข้อมูล
-        const userRecord = await userService.findById(user.id);
+        const userRecord = await userService.findById(user.id)
 
         if (!userRecord) {
-          set.status = 404; // Not Found
-          return ResponseHandler.notFound("User not found");
+          set.status = 404 // Not Found
+          return ResponseHandler.notFound('User not found')
         }
 
         // ตรวจสอบรหัสผ่านปัจจุบัน
-        let isValidPassword = false;
+        let isValidPassword = false
         try {
-          isValidPassword = await common.verifyPassword(
-            currentPassword,
-            userRecord.password,
-          );
+          isValidPassword = await common.verifyPassword(currentPassword, userRecord.password)
         } catch (err) {
-          set.status = 500; // Internal Server Error
-          console.error("Password verification error:", err);
+          set.status = 500 // Internal Server Error
+          console.error('Password verification error:', err)
         }
 
         if (!isValidPassword) {
-          set.status = 400; // Bad Request
-          return ResponseHandler.validationError(
-            "Current password is incorrect",
-          );
+          set.status = 400 // Bad Request
+          return ResponseHandler.validationError('Current password is incorrect')
         }
 
         // อัพเดทรหัสผ่านในฐานข้อมูล
         await userService.updateUser(user.id, {
           password: newPassword,
-        } as Partial<User>);
+        } as Partial<User>)
 
-        set.status = 200; // OK
-        return ResponseHandler.success(null, "Password changed successfully");
+        set.status = 200 // OK
+        return ResponseHandler.success(null, 'Password changed successfully')
       } catch (error: any) {
-        set.status = 500; // Internal Server Error
-        return ResponseHandler.serverError(
-          error.message || "Failed to change password",
-        );
+        set.status = 500 // Internal Server Error
+        return ResponseHandler.serverError(error.message || 'Failed to change password')
       }
     },
     {
       body: changePasswordSchemaUser,
       detail: changePasswordSchemaDocs,
-    },
-  );
+    }
+  )

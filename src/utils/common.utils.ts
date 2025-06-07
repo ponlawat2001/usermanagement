@@ -1,20 +1,19 @@
+/** @format */
+
 export class common {
   static async hashPassword(password: string): Promise<string> {
     return await Bun.password.hash(password, {
-      algorithm: "bcrypt",
+      algorithm: 'bcrypt',
       cost: 5, // ค่าความซับซ้อนของการเข้ารหัส
-    });
+    })
   }
 
-  static async verifyPassword(
-    password: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
+  static async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     try {
-      return await Bun.password.verify(password, hashedPassword);
+      return await Bun.password.verify(password, hashedPassword)
     } catch (error) {
-      console.error("Error verifying password:", error);
-      return false;
+      console.error('Error verifying password:', error)
+      return false
     }
   }
 }
