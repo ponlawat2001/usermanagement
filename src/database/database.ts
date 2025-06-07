@@ -8,4 +8,3 @@ try {
 } catch (error) {
   console.error("DB Connection Error:", error);
 }
-

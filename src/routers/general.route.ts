@@ -1,6 +1,5 @@
 import { Elysia } from "elysia";
 import { ResponseHandler } from "../utils/response.utils";
-import { serverHealthCheckExample } from "../configs/swagger-examples";
 import { apiInformationDocs, healthCheckDocs } from "../docs/general.docs";
 
 export const generalRoutes = new Elysia()
@@ -19,12 +18,12 @@ export const generalRoutes = new Elysia()
           },
           status: "online",
         },
-        "Welcome to User Management API"
+        "Welcome to User Management API",
       );
     },
     {
-      detail: apiInformationDocs
-    }
+      detail: apiInformationDocs,
+    },
   )
   .get(
     "/health",
@@ -40,10 +39,10 @@ export const generalRoutes = new Elysia()
           version: process.env.npm_package_version || "unknown",
           bun: process.versions.bun || "unknown",
         },
-        "Service is healthy"
+        "Service is healthy",
       );
     },
     {
-      detail: healthCheckDocs
-    }
+      detail: healthCheckDocs,
+    },
   );

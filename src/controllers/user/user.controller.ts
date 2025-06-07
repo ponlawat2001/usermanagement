@@ -1,4 +1,4 @@
-import Elysia, { ValidationError } from "elysia";
+import Elysia from "elysia";
 import { requireAuth, requireRole } from "../../middlewares/auth.middleware";
 
 import {
@@ -37,7 +37,7 @@ export const UserController = new Elysia()
     {
       detail: getAllUsersDocs,
       beforeHandle: (context: any) => requireRole(context.user, "admin"),
-    }
+    },
   )
 
   .get(
@@ -56,7 +56,7 @@ export const UserController = new Elysia()
       detail: getUserByIdDocs,
       params: getUserByIdParams,
       beforeHandle: (context: any) => requireRole(context.user, "admin"),
-    }
+    },
   )
 
   .get(
@@ -75,12 +75,12 @@ export const UserController = new Elysia()
       set.status = 200; // OK
       return ResponseHandler.success(
         currentUser,
-        "Current user retrieved successfully"
+        "Current user retrieved successfully",
       );
     },
     {
       detail: getMe,
-    }
+    },
   )
 
   // Create new user
@@ -90,14 +90,14 @@ export const UserController = new Elysia()
       try {
         // Check for existing username or email
         const existingUser = await userService.findByUsernameOrEmail(
-          body.username
+          body.username,
         );
         if (existingUser) {
           throw new Error("Username already exists");
         }
 
         const existingEmail = await userService.findByUsernameOrEmail(
-          body.email
+          body.email,
         );
         if (existingEmail) {
           throw new Error("Email already exists");
@@ -108,26 +108,26 @@ export const UserController = new Elysia()
         return ResponseHandler.success(
           newUser,
           "User created successfully",
-          201
+          201,
         );
       } catch (error: any) {
         // Check error message to provide appropriate response
         if (error.message?.includes("exists")) {
           set.status = 400; // Bad Request
           return ResponseHandler.validationError(
-            "Username or email already exists"
+            "Username or email already exists",
           );
         }
         set.status = 500;
         return ResponseHandler.serverError(
-          error.message || "Failed to create user"
+          error.message || "Failed to create user",
         );
       }
     },
     {
       body: createSchemaUser, // Using schema from repo for request body validation
       detail: createUserDocs,
-    }
+    },
   )
 
   // Update user - Requires authentication
@@ -138,7 +138,7 @@ export const UserController = new Elysia()
         // Check for duplicate email if email is being updated
         if (body.email) {
           const existingUserWithEmail = await userService.findByUsernameOrEmail(
-            body.email
+            body.email,
           );
           if (
             existingUserWithEmail &&
@@ -150,29 +150,29 @@ export const UserController = new Elysia()
 
         const updatedUser = await userService.updateUser(
           params.id,
-          body as any
+          body as any,
         );
         if (!updatedUser) {
           set.status = 400;
           return ResponseHandler.notFound(
-            `User with id ${params.id} not found`
+            `User with id ${params.id} not found`,
           );
         }
         set.status = 200; // OK
         return ResponseHandler.success(
           updatedUser,
-          "User updated successfully"
+          "User updated successfully",
         );
       } catch (error: any) {
         set.status = 400; // Internal Server Error
         if (error.message?.includes("duplicate")) {
           return ResponseHandler.validationError(
-            "Username or email already exists"
+            "Username or email already exists",
           );
         }
         set.status = 500; // Internal Server Error
         return ResponseHandler.serverError(
-          error.message || "Failed to update user"
+          error.message || "Failed to update user",
         );
       }
     },
@@ -181,7 +181,7 @@ export const UserController = new Elysia()
       params: updateUserParams,
       detail: updateUserDocs,
       beforeHandle: (context: any) => requireAuth(context.user),
-    }
+    },
   )
 
   .delete(
@@ -203,5 +203,5 @@ export const UserController = new Elysia()
       params: deleteUserParams,
       detail: deleteUserDocs,
       beforeHandle: (context: any) => requireRole(context.user, "admin"),
-    }
+    },
   );

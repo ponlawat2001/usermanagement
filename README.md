@@ -22,22 +22,26 @@ A modern TypeScript backend API for user management built with Elysia.js and Dri
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone <repository-url>
 cd userbase
 ```
 
 2. Install dependencies
+
 ```bash
 bun install
 ```
 
 3. Run database migrations
+
 ```bash
 bun run migrate
 ```
 
 4. Start the development server
+
 ```bash
 bun run dev
 ```

@@ -16,20 +16,20 @@ export const app = new Elysia()
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
-    })
+    }),
   )
   .use(
     rateLimit({
       max: 100,
       windowMs: 60 * 1000,
       message: "Too many requests from this IP, please try again later",
-    })
+    }),
   )
   .use(
     jwt({
       name: "jwt",
       secret: process.env.JWT_SECRET || "your-secret-key",
-    })
+    }),
   )
   // === Header Extractor HANDLER ===
   .derive(({ headers, jwt }) => extractUser({ headers, jwt }))

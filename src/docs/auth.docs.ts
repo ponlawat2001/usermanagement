@@ -167,26 +167,29 @@ export const changePasswordSchemaDocs = {
   summary: "Change password",
   description: "Change user password with validation",
   tags: ["Authentication"],
-  body: t.Object({
-    currentPassword: t.String({
-      description: 'Current password of the user',
-      examples: ['OldSecureP@ss123'],
-      minLength: 8,
-    }),
-    newPassword: t.String({
-      description: 'New password for the user',
-      examples: ['NewSecureP@ss456'],
-      minLength: 8,
-      pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$',
-    }),
-    confirmNewPassword: t.String({
-      description: 'Confirmation of the new password',
-      examples: ['NewSecureP@ss456'],
-      minLength: 8,
-    }),
-  }, {
-    description: 'Fields required to change the user password'
-  }),
+  body: t.Object(
+    {
+      currentPassword: t.String({
+        description: "Current password of the user",
+        examples: ["OldSecureP@ss123"],
+        minLength: 8,
+      }),
+      newPassword: t.String({
+        description: "New password for the user",
+        examples: ["NewSecureP@ss456"],
+        minLength: 8,
+        pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$",
+      }),
+      confirmNewPassword: t.String({
+        description: "Confirmation of the new password",
+        examples: ["NewSecureP@ss456"],
+        minLength: 8,
+      }),
+    },
+    {
+      description: "Fields required to change the user password",
+    },
+  ),
   responses: {
     "200": {
       description: "Password changed successfully",
@@ -269,7 +272,7 @@ export const discordOAuthSchemaDocs = {
           schema: t.Object({
             status: t.Number(),
             message: t.String(),
-            data: t.String()
+            data: t.String(),
           }),
           example: discordURl,
         },

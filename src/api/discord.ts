@@ -48,7 +48,7 @@ export class DiscordOAuthService {
   static async revokeToken(accessToken: string) {
     // Revoke the access token
     const credentials = Buffer.from(
-      `${process.env.DISCORD_CLIENT_ID}:${process.env.DISCORD_CLIENT_SECRET}`
+      `${process.env.DISCORD_CLIENT_ID}:${process.env.DISCORD_CLIENT_SECRET}`,
     ).toString("base64");
     try {
       const newAccessToken = await oauth.revokeToken(accessToken, credentials);

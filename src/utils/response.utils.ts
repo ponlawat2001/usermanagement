@@ -10,7 +10,7 @@ export class ResponseHandler {
   static success<T>(
     data: T,
     message = "Operation successful",
-    status = 200
+    status = 200,
   ): BaseResponse<T> {
     return {
       status,
@@ -25,7 +25,7 @@ export class ResponseHandler {
   static error<T>(
     message = "Operation failed",
     status = 400,
-    data?: T
+    data?: T,
   ): BaseResponse<T | null> {
     return {
       status,
@@ -39,7 +39,7 @@ export class ResponseHandler {
    */
   static notFound<T>(
     message = "Resource not found",
-    data?: T
+    data?: T,
   ): BaseResponse<T | null> {
     return this.error(message, 404, data);
   }
@@ -49,7 +49,7 @@ export class ResponseHandler {
    */
   static unauthorized<T>(
     message = "Unauthorized access",
-    data?: T
+    data?: T,
   ): BaseResponse<T | null> {
     return this.error(message, 401, data);
   }
@@ -59,7 +59,7 @@ export class ResponseHandler {
    */
   static forbidden<T>(
     message = "Access forbidden",
-    data?: T
+    data?: T,
   ): BaseResponse<T | null> {
     return this.error(message, 403, data);
   }
@@ -69,7 +69,7 @@ export class ResponseHandler {
    */
   static serverError<T>(
     message = "Internal server error",
-    data?: T
+    data?: T,
   ): BaseResponse<T | null> {
     return this.error(message, 500, data);
   }
@@ -79,7 +79,7 @@ export class ResponseHandler {
    */
   static validationError<T>(
     message = "Validation failed",
-    data?: T
+    data?: T,
   ): BaseResponse<T | null> {
     return this.error(message, 422, data);
   }

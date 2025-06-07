@@ -35,13 +35,13 @@ export class UserService {
     }
   }
 
-  async findByDiscordId (discordId: string) {
+  async findByDiscordId(discordId: string) {
     try {
       const userInfo = await db
         .select()
-        .from(user) 
+        .from(user)
         .where(
-          sql`${user.discordId} = ${discordId} AND ${user.deletedAt} IS NULL`
+          sql`${user.discordId} = ${discordId} AND ${user.deletedAt} IS NULL`,
         );
       if (!userInfo || userInfo.length === 0) {
         console.warn(`User with Discord ID ${discordId} not found`);
@@ -53,7 +53,7 @@ export class UserService {
       console.error(`Error fetching user with Discord ID ${discordId}:`, error);
       throw new Error(`Failed to fetch user with Discord ID ${discordId}`);
     }
-  };
+  }
 
   async findByUsernameOrEmail(usernameOrEmail: string) {
     try {
@@ -61,7 +61,7 @@ export class UserService {
         .select()
         .from(user)
         .where(
-          sql`(${user.username} = ${usernameOrEmail} OR ${user.email} = ${usernameOrEmail}) AND ${user.deletedAt} IS NULL`
+          sql`(${user.username} = ${usernameOrEmail} OR ${user.email} = ${usernameOrEmail}) AND ${user.deletedAt} IS NULL`,
         );
       if (!userInfo || userInfo.length === 0) {
         return null;
@@ -70,7 +70,7 @@ export class UserService {
       }
     } catch (error) {
       throw new Error(
-        `Failed to fetch user with username or email ${usernameOrEmail}`
+        `Failed to fetch user with username or email ${usernameOrEmail}`,
       );
     }
   }

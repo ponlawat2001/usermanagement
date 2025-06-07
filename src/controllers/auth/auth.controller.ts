@@ -32,24 +32,24 @@ export const AuthController = new Elysia()
         if (!tokenResponse) {
           set.status = 400;
           return ResponseHandler.validationError(
-            "Invalid Discord authorization code"
+            "Invalid Discord authorization code",
           );
         }
         console.log("Discord Token Response:", tokenResponse);
         return ResponseHandler.success(
           tokenResponse,
-          "Discord sign-in URL generated successfully"
+          "Discord sign-in URL generated successfully",
         );
       } catch (error: any) {
         set.status = 500;
         return ResponseHandler.serverError(
-          error.message || "Discord sign-in failed"
+          error.message || "Discord sign-in failed",
         );
       }
     },
     {
       detail: discordOAuthSchemaDocs,
-    }
+    },
   )
 
   // discord callback
@@ -61,7 +61,7 @@ export const AuthController = new Elysia()
         if (!code) {
           set.status = 400; // Bad Request
           return ResponseHandler.validationError(
-            "Authorization code is required"
+            "Authorization code is required",
           );
         }
         // Exchange authorization code for access token and user info
@@ -69,17 +69,17 @@ export const AuthController = new Elysia()
         if (!discordToken) {
           set.status = 400; // Bad Request
           return ResponseHandler.validationError(
-            "Invalid Discord authorization code"
+            "Invalid Discord authorization code",
           );
         }
-        
+
         const discordUser = await DiscordOAuthService.getUserInfo(
-          discordToken.access_token
+          discordToken.access_token,
         );
         if (!discordUser) {
           set.status = 400; // Bad Request
           return ResponseHandler.validationError(
-            "Failed to fetch Discord user info"
+            "Failed to fetch Discord user info",
           );
         }
 
@@ -95,9 +95,8 @@ export const AuthController = new Elysia()
             discordId: discordUser.id,
             fullname: discordUser.username, // Assuming fullname is same as username
           };
-          const newUser = await userService.createUserByDiscordId(
-            formattedUser
-          );
+          const newUser =
+            await userService.createUserByDiscordId(formattedUser);
           await userService.updateLastLogin(newUser.id);
 
           payload = {
@@ -116,9 +115,8 @@ export const AuthController = new Elysia()
             email: user.email,
           };
 
-          const { accessToken, refreshToken } = await JwtUtils.generateTokens(
-            payload
-          );
+          const { accessToken, refreshToken } =
+            await JwtUtils.generateTokens(payload);
           return ResponseHandler.success(
             {
               accessToken,
@@ -130,25 +128,25 @@ export const AuthController = new Elysia()
                 role: user.role || "user",
               },
             },
-            "Login successful"
+            "Login successful",
           );
         }
       } catch (error: any) {
         set.status = 500; // Internal Server Error
         return ResponseHandler.serverError(
-          error.message || "Discord callback failed"
+          error.message || "Discord callback failed",
         );
       }
     },
     {
       query: t.Object({
-      code: t.String({ description: "Discord authorization code" }),
+        code: t.String({ description: "Discord authorization code" }),
       }),
       detail: {
-      hide: true
+        hide: true,
       },
-    }
-    )
+    },
+  )
 
   // login
   .post(
@@ -160,7 +158,7 @@ export const AuthController = new Elysia()
         if (!user) {
           set.status = 401; // Unauthorized
           return ResponseHandler.unauthorized(
-            "Invalid username/email or password"
+            "Invalid username/email or password",
           );
         }
 
@@ -169,7 +167,7 @@ export const AuthController = new Elysia()
         try {
           isPasswordValid = await common.verifyPassword(
             password,
-            user.password
+            user.password,
           );
         } catch (err) {
           console.error("Password verification error:", err);
@@ -179,7 +177,7 @@ export const AuthController = new Elysia()
         if (!isPasswordValid) {
           set.status = 401;
           return ResponseHandler.unauthorized(
-            "Invalid username/email or password"
+            "Invalid username/email or password",
           );
         }
         const payload = {
@@ -188,9 +186,8 @@ export const AuthController = new Elysia()
           email: user.email,
         };
         // สร้าง JWT token และ refresh token สำหรับ user
-        const { accessToken, refreshToken } = await JwtUtils.generateTokens(
-          payload
-        );
+        const { accessToken, refreshToken } =
+          await JwtUtils.generateTokens(payload);
 
         await userService.updateLastLogin(user.id);
 
@@ -207,7 +204,7 @@ export const AuthController = new Elysia()
               role: user.role || "user",
             },
           },
-          "Login successful"
+          "Login successful",
         );
       } catch (error: any) {
         set.status = 500; // Internal Server Error
@@ -217,7 +214,7 @@ export const AuthController = new Elysia()
     {
       body: loginSchemaUser,
       detail: loginSchemaUserDocs,
-    }
+    },
   )
 
   // แอนด์พอยท์สำหรับ refresh token
@@ -233,7 +230,7 @@ export const AuthController = new Elysia()
         if (!result) {
           set.status = 401; // Unauthorized
           return ResponseHandler.unauthorized(
-            "Invalid or expired refresh token"
+            "Invalid or expired refresh token",
           );
         }
 
@@ -243,19 +240,19 @@ export const AuthController = new Elysia()
           {
             accessToken: result.accessToken,
           },
-          "Token refreshed successfully"
+          "Token refreshed successfully",
         );
       } catch (error: any) {
         set.status = 500; // Internal Server Error
         return ResponseHandler.serverError(
-          error.message || "Failed to refresh token"
+          error.message || "Failed to refresh token",
         );
       }
     },
     {
       body: refreshTokenSchema,
       detail: refreshTokenSchemaDocs,
-    }
+    },
   )
 
   // แอนด์พอยท์สำหรับออกจากระบบ
@@ -272,14 +269,14 @@ export const AuthController = new Elysia()
       } catch (error: any) {
         set.status = 500; // Internal Server Error
         return ResponseHandler.serverError(
-          error.message || "Failed to log out"
+          error.message || "Failed to log out",
         );
       }
     },
     {
       body: refreshTokenSchema,
       detail: logoutSchemaDocs,
-    }
+    },
   )
 
   // แอนด์พอยท์สำหรับเปลี่ยนรหัสผ่าน
@@ -307,7 +304,7 @@ export const AuthController = new Elysia()
         try {
           isValidPassword = await common.verifyPassword(
             currentPassword,
-            userRecord.password
+            userRecord.password,
           );
         } catch (err) {
           set.status = 500; // Internal Server Error
@@ -317,7 +314,7 @@ export const AuthController = new Elysia()
         if (!isValidPassword) {
           set.status = 400; // Bad Request
           return ResponseHandler.validationError(
-            "Current password is incorrect"
+            "Current password is incorrect",
           );
         }
 
@@ -331,12 +328,12 @@ export const AuthController = new Elysia()
       } catch (error: any) {
         set.status = 500; // Internal Server Error
         return ResponseHandler.serverError(
-          error.message || "Failed to change password"
+          error.message || "Failed to change password",
         );
       }
     },
     {
       body: changePasswordSchemaUser,
       detail: changePasswordSchemaDocs,
-    }
+    },
   );

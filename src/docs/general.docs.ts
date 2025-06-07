@@ -1,13 +1,15 @@
 import { t } from "elysia";
-import { apiInformationExample, serverHealthCheckExample } from "../configs/swagger-examples";
+import {
+  apiInformationExample,
+  serverHealthCheckExample,
+} from "../configs/swagger-examples";
 import { SwaggerDetails } from "../interfaces/swagger";
 
 export const apiInformationDocs = {
   summary: "API Information",
   description: "Get general information about the API",
   tags: ["General"],
-  responses: 
-{
+  responses: {
     "200": {
       description: "API information retrieved successfully",
       content: {

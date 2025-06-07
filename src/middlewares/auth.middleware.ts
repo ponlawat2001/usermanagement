@@ -1,7 +1,4 @@
-import Elysia from "elysia";
 import { ResponseHandler } from "../utils/response.utils";
-import { JwtUtils } from "../utils/jwt.utils";
-import { user } from "../schemas/user";
 import { authProfile } from "../interfaces/auth";
 
 /**
@@ -48,12 +45,12 @@ export const requireAuth = (user: authProfile | null) => {
  * ตรวจสอบว่าผู้ใช้มี role ที่กำหนดหรือไม่
  */
 export const requireRole = async (user: authProfile | null, role: string) => {
-   if (!user) {
+  if (!user) {
     return ResponseHandler.unauthorized("Authentication required");
   }
   if (user.role !== role && user.role !== "admin") {
     return ResponseHandler.forbidden(
-      "You do not have permission to access this resource"
+      "You do not have permission to access this resource",
     );
   }
 };

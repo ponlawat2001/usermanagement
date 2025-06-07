@@ -14,13 +14,13 @@ export const errorHandler = new Elysia().onError(
       case "VALIDATION":
         set.status = 400;
         return ResponseHandler.validationError(
-          error.message || "Validation error"
+          error.message || "Validation error",
         );
 
       case "UNAUTHORIZED":
         set.status = 401;
         return ResponseHandler.unauthorized(
-          error.message || "Unauthorized access"
+          error.message || "Unauthorized access",
         );
 
       case "FORBIDDEN":
@@ -36,8 +36,8 @@ export const errorHandler = new Elysia().onError(
         return ResponseHandler.serverError(
           process.env.NODE_ENV === "production"
             ? "An internal server error occurred"
-            : error.message || "Internal server error"
+            : error.message || "Internal server error",
         );
     }
-  }
+  },
 );

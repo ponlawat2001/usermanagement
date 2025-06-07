@@ -38,7 +38,7 @@ export const getAllUsersDocs = {
                 updatedAt: t.String(),
                 isActive: t.Boolean(),
                 role: t.Optional(t.String()),
-              })
+              }),
             ),
           }),
           example: usersListExample,
