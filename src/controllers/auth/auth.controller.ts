@@ -17,6 +17,7 @@ import {
   loginSchemaUser,
 } from "../../validations/auth.validation";
 import { DiscordOAuthService } from "../../api/discord";
+import { User } from "@/interfaces/user";
 
 const userService = new UserService();
 
@@ -282,7 +283,15 @@ export const AuthController = new Elysia()
   // แอนด์พอยท์สำหรับเปลี่ยนรหัสผ่าน
   .post(
     "/change-password",
-    async ({ body, user, set }: { body: any; user: authProfile; set: any }) => {
+    async ({
+      body,
+      user,
+      set,
+    }: {
+      body: typeof changePasswordSchemaUser;
+      user: authProfile;
+      set: any;
+    }) => {
       try {
         const { currentPassword, newPassword, confirmNewPassword } = body;
 
@@ -321,7 +330,7 @@ export const AuthController = new Elysia()
         // อัพเดทรหัสผ่านในฐานข้อมูล
         await userService.updateUser(user.id, {
           password: newPassword,
-        } as any);
+        } as Partial<User>);
 
         set.status = 200; // OK
         return ResponseHandler.success(null, "Password changed successfully");
