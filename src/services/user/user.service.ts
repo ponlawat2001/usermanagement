@@ -8,7 +8,6 @@ import { common } from "../../utils/common.utils";
 
 export class UserService {
   async findAll() {
-    // เรียกใช้ repository method โดยตรง
     try {
       const users = await db.select().from(user).where(isNull(user.deletedAt));
       return users;
@@ -63,17 +62,6 @@ export class UserService {
         throw new Error("Username, email, and password are required");
       }
 
-      // Check for existing username or email
-      const existingUser = await this.findByUsernameOrEmail(userData.username);
-      if (existingUser) {
-        throw new Error("Username already exists");
-      }
-
-      const existingEmail = await this.findByUsernameOrEmail(userData.email);
-      if (existingEmail) {
-        throw new Error("Email already exists");
-      }
-
       const hashedPassword = await common.hashPassword(userData.password ?? "");
 
       const createdUser = await db
@@ -95,25 +83,6 @@ export class UserService {
 
   async updateUser(id: string, userData: Partial<User>) {
     try {
-      // Check for duplicate username if username is being updated
-      if (userData.username) {
-        const existingUserWithUsername = await this.findByUsernameOrEmail(
-          userData.username
-        );
-        if (existingUserWithUsername && existingUserWithUsername.id !== id) {
-          throw new Error("Username already exists");
-        }
-      }
-
-      // Check for duplicate email if email is being updated
-      if (userData.email) {
-        const existingUserWithEmail = await this.findByUsernameOrEmail(
-          userData.email
-        );
-        if (existingUserWithEmail && existingUserWithEmail.id !== id) {
-          throw new Error("Email already exists");
-        }
-      }
 
       const hashedPassword = await common.hashPassword(userData.password ?? "");
       if (userData.password) {

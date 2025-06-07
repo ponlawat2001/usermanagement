@@ -13,7 +13,10 @@ import {
   getMe,
 } from "../../docs/user.docs";
 
-import { createSchemaUser, updateSchemaUser } from "../../validations/user.validation";
+import {
+  createSchemaUser,
+  updateSchemaUser,
+} from "../../validations/user.validation";
 import { ResponseHandler } from "../../utils/response.utils";
 import { UserService } from "../../services/user/user.service";
 import { authProfile } from "../../interfaces/auth";
@@ -33,7 +36,7 @@ export const UserController = new Elysia()
     },
     {
       detail: getAllUsersDocs,
-      // beforeHandle: (context: any) => requireRole(context.user, "admin"),
+      beforeHandle: (context: any) => requireRole(context.user, "admin"),
     }
   )
 
@@ -52,12 +55,13 @@ export const UserController = new Elysia()
     {
       detail: getUserByIdDocs,
       params: getUserByIdParams,
+      beforeHandle: (context: any) => requireRole(context.user, "admin"),
     }
   )
 
   .get(
     "/me",
-    async ({ user, set } : { user: authProfile , set: any}) => {
+    async ({ user, set }: { user: authProfile; set: any }) => {
       if (!user) {
         set.status = 401; // Unauthorized
         return ResponseHandler.unauthorized("User not authenticated");
@@ -69,7 +73,10 @@ export const UserController = new Elysia()
         return ResponseHandler.notFound("Current user not found");
       }
       set.status = 200; // OK
-      return ResponseHandler.success(currentUser, "Current user retrieved successfully");
+      return ResponseHandler.success(
+        currentUser,
+        "Current user retrieved successfully"
+      );
     },
     {
       detail: getMe,
@@ -81,6 +88,21 @@ export const UserController = new Elysia()
     "/register",
     async ({ body, set }) => {
       try {
+        // Check for existing username or email
+        const existingUser = await userService.findByUsernameOrEmail(
+          body.username
+        );
+        if (existingUser) {
+          throw new Error("Username already exists");
+        }
+
+        const existingEmail = await userService.findByUsernameOrEmail(
+          body.email
+        );
+        if (existingEmail) {
+          throw new Error("Email already exists");
+        }
+
         const newUser = await userService.createUser(body);
         set.status = 201; // OK
         return ResponseHandler.success(
@@ -113,7 +135,23 @@ export const UserController = new Elysia()
     "/:id",
     async ({ params, body, set }) => {
       try {
-        const updatedUser = await userService.updateUser(params.id, body as any);
+        // Check for duplicate email if email is being updated
+        if (body.email) {
+          const existingUserWithEmail = await userService.findByUsernameOrEmail(
+            body.email
+          );
+          if (
+            existingUserWithEmail &&
+            existingUserWithEmail.email === body.email
+          ) {
+            throw new Error("Email already exists");
+          }
+        }
+
+        const updatedUser = await userService.updateUser(
+          params.id,
+          body as any
+        );
         if (!updatedUser) {
           set.status = 400;
           return ResponseHandler.notFound(
@@ -142,6 +180,7 @@ export const UserController = new Elysia()
       body: updateSchemaUser,
       params: updateUserParams,
       detail: updateUserDocs,
+      beforeHandle: (context: any) => requireAuth(context.user),
     }
   )
 
@@ -163,5 +202,6 @@ export const UserController = new Elysia()
     {
       params: deleteUserParams,
       detail: deleteUserDocs,
+      beforeHandle: (context: any) => requireRole(context.user, "admin"),
     }
   );
