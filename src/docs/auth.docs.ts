@@ -264,7 +264,7 @@ export const changePasswordSchemaDocs = {
 export const discordOAuthSchemaDocs = {
   summary: 'Discord OAuth login',
   description: 'Authenticate user via Discord OAuth and return session token',
-  tags: ['Authentication'],
+  tags: ['Third-party Authentication'],
   responses: {
     '200': {
       description: 'Discord OAuth login successful',

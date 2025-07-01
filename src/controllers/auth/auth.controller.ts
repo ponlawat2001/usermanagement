@@ -1,12 +1,11 @@
 /** @format */
 
-import Elysia, { t } from 'elysia'
+import Elysia from 'elysia'
 import { ResponseHandler } from '../../utils/response.utils'
 import { changePasswordSchemaUser } from '../../validations/user.validation'
 import { JwtUtils } from '../../utils/jwt.utils'
 import {
   changePasswordSchemaDocs,
-  discordOAuthSchemaDocs,
   loginSchemaUserDocs,
   logoutSchemaDocs,
   refreshTokenSchemaDocs,
@@ -15,121 +14,11 @@ import { authProfile } from '../../interfaces/auth'
 import { UserService } from '../../services/user/user.service'
 import { common } from '../../utils/common.utils'
 import { refreshTokenSchema, loginSchemaUser } from '../../validations/auth.validation'
-import { DiscordOAuthService } from '../../api/discord'
 import { User } from '@/interfaces/user'
 
 const userService = new UserService()
 
 export const AuthController = new Elysia()
-
-  // discord Sign in
-  .post(
-    '/discord-sign-in',
-    async ({ set }) => {
-      try {
-        // Exchange authorization code for access token
-        const tokenResponse = await DiscordOAuthService.generateAuthUrl()
-        if (!tokenResponse) {
-          set.status = 400
-          return ResponseHandler.validationError('Invalid Discord authorization code')
-        }
-        console.log('Discord Token Response:', tokenResponse)
-        return ResponseHandler.success(tokenResponse, 'Discord sign-in URL generated successfully')
-      } catch (error: any) {
-        set.status = 500
-        return ResponseHandler.serverError(error.message || 'Discord sign-in failed')
-      }
-    },
-    {
-      detail: discordOAuthSchemaDocs,
-    }
-  )
-
-  // discord callback
-  .get(
-    '/discord-callback',
-    async ({ query, set }) => {
-      try {
-        const { code } = query
-        if (!code) {
-          set.status = 400 // Bad Request
-          return ResponseHandler.validationError('Authorization code is required')
-        }
-        // Exchange authorization code for access token and user info
-        const discordToken = await DiscordOAuthService.getAccessToken(code)
-        if (!discordToken) {
-          set.status = 400 // Bad Request
-          return ResponseHandler.validationError('Invalid Discord authorization code')
-        }
-
-        const discordUser = await DiscordOAuthService.getUserInfo(discordToken.access_token)
-        if (!discordUser) {
-          set.status = 400 // Bad Request
-          return ResponseHandler.validationError('Failed to fetch Discord user info')
-        }
-
-        let payload = {
-          id: '',
-          username: '',
-          email: '', // Discord may not provide email
-        }
-        // Check if user already exists in the database
-        const user = await userService.findByDiscordId(discordUser.id)
-        if (!user) {
-          const formattedUser = {
-            discordId: discordUser.id,
-            fullname: discordUser.username, // Assuming fullname is same as username
-          }
-          const newUser = await userService.createUserByDiscordId(formattedUser)
-          await userService.updateLastLogin(newUser.id)
-
-          payload = {
-            id: newUser.id,
-            username: newUser.username,
-            email: newUser.email || '', // Discord may not provide email
-          }
-        } else {
-          // If user exists, update their last login time
-          await userService.updateLastLogin(user.id)
-
-          // Generate JWT token and refresh token for the user
-          payload = {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-          }
-
-          const { accessToken, refreshToken } = await JwtUtils.generateTokens(payload)
-          return ResponseHandler.success(
-            {
-              accessToken,
-              refreshToken,
-              user: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: user.role || 'user',
-              },
-            },
-            'Login successful'
-          )
-        }
-      } catch (error: any) {
-        set.status = 500 // Internal Server Error
-        return ResponseHandler.serverError(error.message || 'Discord callback failed')
-      }
-    },
-    {
-      query: t.Object({
-        code: t.String({
-          description: 'Discord authorization code',
-        }),
-      }),
-      detail: {
-        hide: true,
-      },
-    }
-  )
 
   // login
   .post(
