@@ -101,9 +101,11 @@ export class UserService {
 
   async updateUser(id: string, userData: Partial<User>) {
     try {
-      const hashedPassword = await common.hashPassword(userData.password ?? '')
       if (userData.password) {
-        userData.password = hashedPassword
+        const hashedPassword = await common.hashPassword(userData.password ?? '')
+        if (userData.password) {
+          userData.password = hashedPassword
+        }
       }
 
       const updatedUser = await db

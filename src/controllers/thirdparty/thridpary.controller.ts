@@ -121,118 +121,118 @@ export const ThirdpartyController = new Elysia()
     }
   )
 
-  // Google Sign in
-  .post(
-    '/google-sign-in',
-    async ({ set }) => {
-      try {
-        const authUrl = await GoogleOAuthService.generateAuthUrl()
-        if (!authUrl) {
-          set.status = 400
-          return ResponseHandler.validationError('Failed to generate Google authorization URL')
-        }
-        return ResponseHandler.success(authUrl, 'Google sign-in URL generated successfully')
-      } catch (error: any) {
-        set.status = 500
-        return ResponseHandler.serverError(error.message || 'Google sign-in failed')
-      }
-    },
-    {
-      detail: {
-        tags: ['Third Party Auth'],
-        summary: 'Generate Google OAuth sign-in URL',
-        description: 'Returns Google OAuth authorization URL for user authentication',
-      },
-    }
-  )
+// // Google Sign in
+// .post(
+//   '/google-sign-in',
+//   async ({ set }) => {
+//     try {
+//       const authUrl = await GoogleOAuthService.generateAuthUrl()
+//       if (!authUrl) {
+//         set.status = 400
+//         return ResponseHandler.validationError('Failed to generate Google authorization URL')
+//       }
+//       return ResponseHandler.success(authUrl, 'Google sign-in URL generated successfully')
+//     } catch (error: any) {
+//       set.status = 500
+//       return ResponseHandler.serverError(error.message || 'Google sign-in failed')
+//     }
+//   },
+//   {
+//     detail: {
+//       tags: ['Third Party Auth'],
+//       summary: 'Generate Google OAuth sign-in URL',
+//       description: 'Returns Google OAuth authorization URL for user authentication',
+//     },
+//   }
+// )
 
-  // Google callback
-  .get(
-    '/google-callback',
-    async ({ query, set }) => {
-      try {
-        const { code } = query
-        if (!code) {
-          set.status = 400
-          return ResponseHandler.validationError('Authorization code is required')
-        }
+// // Google callback
+// .get(
+//   '/google-callback',
+//   async ({ query, set }) => {
+//     try {
+//       const { code } = query
+//       if (!code) {
+//         set.status = 400
+//         return ResponseHandler.validationError('Authorization code is required')
+//       }
 
-        // Exchange authorization code for access token
-        const googleToken = await GoogleOAuthService.getAccessToken(code)
-        if (!googleToken) {
-          set.status = 400
-          return ResponseHandler.validationError('Invalid Google authorization code')
-        }
+//       // Exchange authorization code for access token
+//       const googleToken = await GoogleOAuthService.getAccessToken(code)
+//       if (!googleToken) {
+//         set.status = 400
+//         return ResponseHandler.validationError('Invalid Google authorization code')
+//       }
 
-        // Get user info from Google
-        const googleUser = await GoogleOAuthService.getUserInfo(googleToken.access_token)
-        if (!googleUser) {
-          set.status = 400
-          return ResponseHandler.validationError('Failed to fetch Google user info')
-        }
+//       // Get user info from Google
+//       const googleUser = await GoogleOAuthService.getUserInfo(googleToken.access_token)
+//       if (!googleUser) {
+//         set.status = 400
+//         return ResponseHandler.validationError('Failed to fetch Google user info')
+//       }
 
-        let payload = {
-          id: '',
-          username: '',
-          email: '',
-        }
+//       let payload = {
+//         id: '',
+//         username: '',
+//         email: '',
+//       }
 
-        // Check if user already exists in the database
-        const user = await userService.findByGoogleId(googleUser.id)
-        if (!user) {
-          // Create new user
-          const formattedUser = {
-            googleId: googleUser.id,
-            fullname: googleUser.name,
-            email: googleUser.email,
-          }
-          const newUser = await userService.createUserByGoogleId(formattedUser)
-          await userService.updateLastLogin(newUser.id)
+//       // Check if user already exists in the database
+//       const user = await userService.findByGoogleId(googleUser.id)
+//       if (!user) {
+//         // Create new user
+//         const formattedUser = {
+//           googleId: googleUser.id,
+//           fullname: googleUser.name,
+//           email: googleUser.email,
+//         }
+//         const newUser = await userService.createUserByGoogleId(formattedUser)
+//         await userService.updateLastLogin(newUser.id)
 
-          payload = {
-            id: newUser.id,
-            username: newUser.username,
-            email: newUser.email,
-          }
-        } else {
-          // User exists, update last login
-          await userService.updateLastLogin(user.id)
+//         payload = {
+//           id: newUser.id,
+//           username: newUser.username,
+//           email: newUser.email,
+//         }
+//       } else {
+//         // User exists, update last login
+//         await userService.updateLastLogin(user.id)
 
-          payload = {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-          }
-        }
+//         payload = {
+//           id: user.id,
+//           username: user.username,
+//           email: user.email,
+//         }
+//       }
 
-        // Generate JWT tokens
-        const { accessToken, refreshToken } = await JwtUtils.generateTokens(payload)
-        return ResponseHandler.success(
-          {
-            accessToken,
-            refreshToken,
-            user: {
-              id: payload.id,
-              username: payload.username,
-              email: payload.email,
-              role: user?.role || 'user',
-            },
-          },
-          'Google login successful'
-        )
-      } catch (error: any) {
-        set.status = 500
-        return ResponseHandler.serverError(error.message || 'Google callback failed')
-      }
-    },
-    {
-      query: t.Object({
-        code: t.String({
-          description: 'Google authorization code',
-        }),
-      }),
-      detail: {
-        hide: true,
-      },
-    }
-  )
+//       // Generate JWT tokens
+//       const { accessToken, refreshToken } = await JwtUtils.generateTokens(payload)
+//       return ResponseHandler.success(
+//         {
+//           accessToken,
+//           refreshToken,
+//           user: {
+//             id: payload.id,
+//             username: payload.username,
+//             email: payload.email,
+//             role: user?.role || 'user',
+//           },
+//         },
+//         'Google login successful'
+//       )
+//     } catch (error: any) {
+//       set.status = 500
+//       return ResponseHandler.serverError(error.message || 'Google callback failed')
+//     }
+//   },
+//   {
+//     query: t.Object({
+//       code: t.String({
+//         description: 'Google authorization code',
+//       }),
+//     }),
+//     detail: {
+//       hide: true,
+//     },
+//   }
+// )

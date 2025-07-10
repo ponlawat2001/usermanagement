@@ -49,6 +49,7 @@ export const AuthController = new Elysia()
           id: user.id,
           username: user.username,
           email: user.email,
+          role: user.role || 'user',
         }
         // สร้าง JWT token และ refresh token สำหรับ user
         const { accessToken, refreshToken } = await JwtUtils.generateTokens(payload)
